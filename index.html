@@ -1036,8 +1036,8 @@
         const GATE_DATE = new Date('2027-02-06T09:00:00+05:30');
 
         const PHASES = [
-            { id: 1, name: "College = GATE", dates: "Sep 16 – Nov 7", start: "2026-09-16", end: "2026-11-07", color: "#ff6b35", sprintRange: [1, 13] },
-            { id: 2, name: "End Sems", dates: "Nov 9 – Nov 18", start: "2026-11-09", end: "2026-11-18", color: "#f7c948", sprintRange: [0, 0] },
+            { id: 1, name: "College = GATE", dates: "Sep 16 – Oct 31", start: "2026-09-16", end: "2026-10-31", color: "#ff6b35", sprintRange: [1, 12] },
+            { id: 2, name: "End Sem Prep + Exams", dates: "Nov 1 – Nov 18", start: "2026-11-01", end: "2026-11-18", color: "#f7c948", sprintRange: [0, 0] },
             { id: 3, name: "Break #1 Blitz", dates: "Nov 19 – Nov 30", start: "2026-11-19", end: "2026-11-30", color: "#4ecdc4", sprintRange: [14, 16] },
             { id: 4, name: "Spring + GATE", dates: "Dec 1 – Dec 20", start: "2026-12-01", end: "2026-12-20", color: "#6c5ce7", sprintRange: [17, 21] },
             { id: 5, name: "Break #2 Blitz", dates: "Dec 20 – Jan 3", start: "2026-12-20", end: "2027-01-03", color: "#a29bfe", sprintRange: [22, 25] },
@@ -1054,7 +1054,7 @@
             { id: "digital-logic", name: "Digital Logic", shortName: "DL", marks: "4-7", color: "#a29bfe", sprints: [16] },
             { id: "toc", name: "Theory of Computation", shortName: "TOC", marks: "7-9", color: "#fd79a8", sprints: [19, 20, 21, 22, 23] },
             { id: "engg-maths", name: "Engg. Mathematics", shortName: "Math", marks: "~13", color: "#55a3f7", sprints: [15, 16, 21] },
-            { id: "general-aptitude", name: "General Aptitude", shortName: "GA", marks: "15", color: "#f7c948", sprints: [12, 13, 25] },
+            { id: "general-aptitude", name: "General Aptitude", shortName: "GA", marks: "15", color: "#f7c948", sprints: [12, 25] },
         ];
 
         const SPRINTS = [
@@ -1078,12 +1078,10 @@
               deliverables: ["SQL queries practice", "1NF → BCNF", "8 GATE DBMS PYQs"] },
             { id: 10, phase: 1, title: "DSA: DP Part 2", start: "2026-10-22", end: "2026-10-25", subject: "algorithms", reward: "🍛🍛",
               deliverables: ["5-7 more DP problems", "Graph + DP combos", "DSA COMPLETE ✅"] },
-            { id: 11, phase: 1, title: "DBMS: Transactions + B/B+ Trees", start: "2026-10-26", end: "2026-10-29", subject: "dbms", reward: "🥟",
+            { id: 11, phase: 1, title: "DBMS: Transactions + B/B+ Trees", start: "2026-10-25", end: "2026-10-28", subject: "dbms", reward: "🥟",
               deliverables: ["ACID, Serializability", "Indexing concepts", "8 GATE DBMS PYQs"] },
-            { id: 12, phase: 1, title: "General Aptitude Part 1", start: "2026-10-30", end: "2026-11-02", subject: "general-aptitude", reward: "🎯",
-              deliverables: ["Verbal + Numerical basics", "15 GA PYQs solved"] },
-            { id: 13, phase: 1, title: "GA Part 2 + Weak Areas", start: "2026-11-03", end: "2026-11-07", subject: "general-aptitude", reward: "🥟",
-              deliverables: ["15 more GA PYQs", "Revisit weak topics", "End-sem prep mindset"] },
+            { id: 12, phase: 1, title: "General Aptitude", start: "2026-10-28", end: "2026-10-31", subject: "general-aptitude", reward: "🎯",
+              deliverables: ["Verbal + Numerical basics", "15 GA PYQs solved", "Quick weak areas review"] },
             // Phase 3
             { id: 14, phase: 3, title: "Prog & DS Revival", start: "2026-11-19", end: "2026-11-22", subject: "pds", reward: "🍗",
               deliverables: ["C concepts, Pointers revised", "Trees (BST, AVL, Heap)", "Hashing", "15 GATE PDS PYQs"] },
@@ -1109,8 +1107,8 @@
               deliverables: ["Turing Machines", "Decidability / Undecidability", "5 PYQs", "TOC DONE ✅"] },
             { id: 24, phase: 5, title: "🎯 MOCK TEST 1", start: "2026-12-28", end: "2026-12-31", subject: null, reward: "🍛🍛",
               deliverables: ["Full 3-hr timed mock", "Detailed analysis", "Weak areas list"] },
-            { id: 25, phase: 5, title: "Weak Area Fix + GA", start: "2027-01-01", end: "2027-01-03", subject: "general-aptitude", reward: "🎆",
-              deliverables: ["Fix top 3 weak topics", "10 GA PYQs", "New year, new grind"] },
+            { id: 25, phase: 5, title: "GA Part 2 + Weak Areas", start: "2027-01-01", end: "2027-01-03", subject: "general-aptitude", reward: "🎆",
+              deliverables: ["Fix top 3 weak topics", "15 GA PYQs", "Revisit weak areas", "New year, new grind"] },
             // Phase 6
             { id: 26, phase: 6, title: "Full Rapid Revision", start: "2027-01-03", end: "2027-01-07", subject: null, reward: "🥟",
               deliverables: ["All subjects rapid fire", "Formula sheet started"] },
@@ -1133,6 +1131,8 @@
             { id: 2, sprint: 27, label: "Mock Test 2", targetDate: "Jan 8-11" },
             { id: 3, sprint: 29, label: "Mock Test 3", targetDate: "Jan 16-19" },
         ];
+
+        let currentModalSprintId = null;
 
         // ===== STATE =====
         function getState() {
@@ -1165,6 +1165,10 @@
             }
 
             renderAll();
+            // Re-render modal if open
+            if (currentModalSprintId !== null) {
+                openSprintModal(currentModalSprintId);
+            }
         }
 
         function getMockScore(mockId) {
@@ -1198,12 +1202,24 @@
 
         function getCurrentSprint() {
             const now = today();
+            // Find the date-based current sprint
+            let current = null;
             for (const sprint of SPRINTS) {
-                if (now >= parseDate(sprint.start) && now <= parseDate(sprint.end)) return sprint;
+                if (now >= parseDate(sprint.start) && now <= parseDate(sprint.end)) {
+                    current = sprint;
+                    break;
+                }
             }
-            // Find next upcoming sprint
+            // If current sprint is completed, find next incomplete one
+            if (current && isSprintCompleted(current)) {
+                for (const sprint of SPRINTS) {
+                    if (sprint.id > current.id && !isSprintCompleted(sprint)) return sprint;
+                }
+            }
+            if (current) return current;
+            // Find next upcoming sprint that's not completed
             for (const sprint of SPRINTS) {
-                if (now < parseDate(sprint.start)) return sprint;
+                if (now < parseDate(sprint.start) && !isSprintCompleted(sprint)) return sprint;
             }
             return SPRINTS[SPRINTS.length - 1];
         }
@@ -1505,6 +1521,7 @@
 
         // ===== MODAL =====
         function openSprintModal(sprintId) {
+            currentModalSprintId = sprintId;
             const sprint = SPRINTS.find(s => s.id === sprintId);
             const progress = getSprintProgress(sprint);
             const subject = SUBJECTS.find(s => s.id === sprint.subject);
@@ -1542,6 +1559,7 @@
 
         function closeModal(event) {
             if (event && event.target !== event.currentTarget) return;
+            currentModalSprintId = null;
             document.getElementById('modal-overlay').classList.remove('open');
         }
 
