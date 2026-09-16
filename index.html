@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GATE 2027 — Rounak's War Room</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #111128;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888aa;
+            --text-muted: #555577;
+            --accent-1: #ff6b35;
+            --accent-2: #f7c948;
+            --accent-gradient: linear-gradient(135deg, #ff6b35, #f7c948);
+            --green: #4ecdc4;
+            --blue: #6c5ce7;
+            --red: #ff6b6b;
+            --purple: #a29bfe;
+            --pink: #fd79a8;
+            --cyan: #00cec9;
+            --orange: #e17055;
+            --yellow: #fdcb6e;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(255, 107, 53, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(108, 92, 231, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(78, 205, 196, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            padding: 32px 0 0;
+            text-align: center;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .logo .badge {
+            background: var(--accent-gradient);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+        }
+
+        .subtitle span {
+            color: var(--accent-1);
+            font-weight: 600;
+        }
+
+        /* ===== COUNTDOWN ===== */
+        .countdown-section {
+            margin-bottom: 40px;
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .countdown-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 28px;
+            min-width: 100px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .countdown-item:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .countdown-item .number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .countdown-item .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        .countdown-message {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ===== STATS ROW ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, border-color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            margin-top: 48px;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .section-header .line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .section-header .count {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* ===== PHASE TIMELINE ===== */
+        .phase-timeline {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 48px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .phase-card {
+            flex: 1;
+            min-width: 160px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .phase-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+            background: var(--text-muted);
+            transition: background 0.3s;
+        }
+
+        .phase-card.active::before { background: var(--accent-gradient); }
+        .phase-card.completed::before { background: var(--green); }
+
+        .phase-card.active {
+            border-color: rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .phase-card.completed {
+            border-color: rgba(78, 205, 196, 0.2);
+        }
+
+        .phase-card .phase-num {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .phase-card .phase-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .phase-card .phase-dates {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .phase-card .phase-progress {
+            margin-top: 10px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .phase-card .phase-progress-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.8s ease;
+        }
+
+        /* ===== CURRENT SPRINT ===== */
+        .current-sprint {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(247, 201, 72, 0.05));
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-sprint::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+
+        .current-sprint .sprint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-gradient);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .current-sprint .sprint-badge.rest-badge {
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+        }
+
+        .current-sprint .sprint-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .current-sprint .sprint-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .current-sprint .sprint-meta span {
+            color: var(--accent-2);
+        }
+
+        .deliverables {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .deliverable {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .deliverable:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .deliverable.checked {
+            opacity: 0.6;
+        }
+
+        .deliverable.checked .deliverable-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--text-muted);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .deliverable.checked .checkbox {
+            background: var(--accent-gradient);
+            border-color: transparent;
+        }
+
+        .checkbox svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s;
+        }
+
+        .deliverable.checked .checkbox svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .deliverable-text {
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        /* ===== SUBJECT PROGRESS ===== */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .subject-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .subject-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .subject-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .subject-marks {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .subject-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .subject-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+            width: 0;
+        }
+
+        .subject-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .subject-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* ===== ALL SPRINTS ===== */
+        .sprint-phase-group {
+            margin-bottom: 32px;
+        }
+
+        .sprint-phase-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sprint-phase-title .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .sprints-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .sprint-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .sprint-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .sprint-card.active {
+            border-color: rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.04);
+        }
+
+        .sprint-card.completed {
+            border-color: rgba(78, 205, 196, 0.2);
+        }
+
+        .sprint-card.completed .sprint-card-title {
+            color: var(--text-secondary);
+        }
+
+        .sprint-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .sprint-card-num {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .sprint-card-status {
+            font-size: 0.85rem;
+        }
+
+        .sprint-card-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .sprint-card-dates {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .sprint-card-progress {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .sprint-card-progress-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        /* Sprint detail modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover { background: rgba(255,255,255,0.1); }
+
+        .modal h3 {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            padding-right: 32px;
+        }
+
+        .modal .modal-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* ===== MOCK TEST SECTION ===== */
+        .mock-tests {
+            margin-bottom: 48px;
+        }
+
+        .mock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .mock-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .mock-card .mock-num {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .mock-card .mock-score {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .mock-card .mock-score.pending {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+
+        .mock-card .mock-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .mock-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mock-input-group input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .mock-input-group input:focus {
+            border-color: var(--accent-1);
+        }
+
+        .mock-input-group button {
+            background: var(--accent-gradient);
+            border: none;
+            color: #000;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: opacity 0.3s;
+        }
+
+        .mock-input-group button:hover { opacity: 0.85; }
+
+        /* ===== FORMULA SHEETS ===== */
+        .formula-section { margin-bottom: 48px; }
+
+        /* ===== MOMOS CELEBRATION ===== */
+        .momos-toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.95), rgba(247, 201, 72, 0.95));
+            color: #000;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 1rem;
+            z-index: 200;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+        }
+
+        .momos-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== CONFETTI ===== */
+        .confetti-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 300;
+            overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            top: -10px;
+            animation: confettiFall 3s ease-in forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 48px 0 32px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 48px;
+        }
+
+        footer .quote {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            .logo h1 { font-size: 1.5rem; }
+            .countdown { gap: 8px; }
+            .countdown-item { padding: 14px 18px; min-width: 70px; }
+            .countdown-item .number { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .phase-timeline { gap: 6px; }
+            .phase-card { min-width: 130px; padding: 12px; }
+            .current-sprint { padding: 20px; }
+            .current-sprint .sprint-title { font-size: 1.2rem; }
+            .subjects-grid { grid-template-columns: 1fr; }
+            .sprints-row { grid-template-columns: 1fr; }
+            .mock-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 8px 20px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--accent-gradient);
+            color: #000;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* Quick actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+        }
+
+        .quick-action-btn:hover {
+            background: rgba(255,107,53,0.1);
+            border-color: rgba(255,107,53,0.3);
+            color: var(--accent-1);
+        }
+
+        .reset-btn {
+            background: none;
+            border: 1px solid rgba(255,107,107,0.3);
+            color: var(--red);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,107,107,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div class="logo">
+                <h1>🎯 GATE 2027</h1>
+                <span class="badge">WAR ROOM</span>
+            </div>
+            <p class="subtitle">
+                <span>Rounak KR</span> · KIIT CSE · Prepare 80 · Attempt 65 · Score 55+
+            </p>
+        </header>
+
+        <!-- COUNTDOWN -->
+        <section class="countdown-section animate-in">
+            <div class="countdown" id="countdown"></div>
+            <p class="countdown-message" id="countdown-message"></p>
+        </section>
+
+        <!-- STATS -->
+        <section class="stats-grid animate-in" style="animation-delay: 0.1s" id="stats-grid"></section>
+
+        <!-- NAV TABS -->
+        <nav class="nav-tabs">
+            <div class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</div>
+            <div class="nav-tab" data-tab="sprints" onclick="switchTab('sprints')">🏃 Sprints</div>
+            <div class="nav-tab" data-tab="subjects" onclick="switchTab('subjects')">📚 Subjects</div>
+            <div class="nav-tab" data-tab="mocks" onclick="switchTab('mocks')">📝 Mock Tests</div>
+        </nav>
+
+        <!-- TAB: DASHBOARD -->
+        <div class="tab-content active" id="tab-dashboard">
+            <!-- PHASE TIMELINE -->
+            <div class="section-header">
+                <h2>⚡ Phases</h2>
+                <div class="line"></div>
+            </div>
+            <div class="phase-timeline" id="phase-timeline"></div>
+
+            <!-- CURRENT SPRINT -->
+            <div class="section-header">
+                <h2>🔥 Current Sprint</h2>
+                <div class="line"></div>
+            </div>
+            <div id="current-sprint-container"></div>
+
+            <!-- SUBJECT PROGRESS OVERVIEW -->
+            <div class="section-header">
+                <h2>📚 Subject Progress</h2>
+                <div class="line"></div>
+            </div>
+            <div class="subjects-grid" id="subjects-grid-overview"></div>
+        </div>
+
+        <!-- TAB: SPRINTS -->
+        <div class="tab-content" id="tab-sprints">
+            <div class="section-header">
+                <h2>🏃 All Sprints</h2>
+                <div class="line"></div>
+                <span class="count" id="sprint-count"></span>
+            </div>
+            <div id="all-sprints"></div>
+        </div>
+
+        <!-- TAB: SUBJECTS -->
+        <div class="tab-content" id="tab-subjects">
+            <div class="section-header">
+                <h2>📚 Subject Breakdown</h2>
+                <div class="line"></div>
+            </div>
+            <div class="subjects-grid" id="subjects-grid-detail"></div>
+        </div>
+
+        <!-- TAB: MOCKS -->
+        <div class="tab-content" id="tab-mocks">
+            <div class="section-header">
+                <h2>📝 Mock Tests</h2>
+                <div class="line"></div>
+            </div>
+            <div class="mock-grid" id="mock-grid"></div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <p class="quote">"I'm not a genius. I just grind." — Rounak</p>
+            <p>GATE 2027 War Room · Built with 🥟 and determination</p>
+            <button class="reset-btn" onclick="resetAllData()">Reset All Data</button>
+        </footer>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" id="modal-content"></div>
+    </div>
+
+    <!-- MOMOS TOAST -->
+    <div class="momos-toast" id="momos-toast">🥟 Sprint complete! Momos earned!</div>
+
+    <!-- CONFETTI CONTAINER -->
+    <div class="confetti-container" id="confetti-container"></div>
+
+    <script>
+        // ===== DATA =====
+        const GATE_DATE = new Date('2027-02-06T09:00:00+05:30');
+
+        const PHASES = [
+            { id: 1, name: "College = GATE", dates: "Sep 16 – Nov 7", start: "2026-09-16", end: "2026-11-07", color: "#ff6b35", sprintRange: [1, 13] },
+            { id: 2, name: "End Sems", dates: "Nov 9 – Nov 18", start: "2026-11-09", end: "2026-11-18", color: "#f7c948", sprintRange: [0, 0] },
+            { id: 3, name: "Break #1 Blitz", dates: "Nov 19 – Nov 30", start: "2026-11-19", end: "2026-11-30", color: "#4ecdc4", sprintRange: [14, 16] },
+            { id: 4, name: "Spring + GATE", dates: "Dec 1 – Dec 20", start: "2026-12-01", end: "2026-12-20", color: "#6c5ce7", sprintRange: [17, 21] },
+            { id: 5, name: "Break #2 Blitz", dates: "Dec 20 – Jan 3", start: "2026-12-20", end: "2027-01-03", color: "#a29bfe", sprintRange: [22, 25] },
+            { id: 6, name: "Final Sprint", dates: "Jan 3 – Jan 30", start: "2027-01-03", end: "2027-01-30", color: "#fd79a8", sprintRange: [26, 32] },
+        ];
+
+        const SUBJECTS = [
+            { id: "algorithms", name: "Algorithms", shortName: "Algo", marks: "8-10", color: "#ff6b6b", sprints: [1, 5] },
+            { id: "os", name: "Operating Systems", shortName: "OS", marks: "8-10", color: "#4ecdc4", sprints: [2, 6] },
+            { id: "cn", name: "Computer Networks", shortName: "CN", marks: "7-9", color: "#6c5ce7", sprints: [3, 8] },
+            { id: "dbms", name: "DBMS", shortName: "DBMS", marks: "7-9", color: "#fdcb6e", sprints: [9, 11] },
+            { id: "pds", name: "Prog & Data Structures", shortName: "PDS", marks: "10-13", color: "#e17055", sprints: [14] },
+            { id: "coa", name: "Computer Org & Arch", shortName: "COA", marks: "7-10", color: "#00cec9", sprints: [17, 18] },
+            { id: "digital-logic", name: "Digital Logic", shortName: "DL", marks: "4-7", color: "#a29bfe", sprints: [16] },
+            { id: "toc", name: "Theory of Computation", shortName: "TOC", marks: "7-9", color: "#fd79a8", sprints: [19, 20, 21, 22, 23] },
+            { id: "engg-maths", name: "Engg. Mathematics", shortName: "Math", marks: "~13", color: "#55a3f7", sprints: [15, 16, 21] },
+            { id: "general-aptitude", name: "General Aptitude", shortName: "GA", marks: "15", color: "#f7c948", sprints: [12, 13, 25] },
+        ];
+
+        const SPRINTS = [
+            { id: 1, phase: 1, title: "DAA: Divide & Conquer, Greedy", start: "2026-09-16", end: "2026-09-19", subject: "algorithms", reward: "🥟",
+              deliverables: ["College notes done", "10 GATE Algo PYQs", "Recurrence relations clear"] },
+            { id: 2, phase: 1, title: "DOS: Process Mgmt + Scheduling", start: "2026-09-20", end: "2026-09-23", subject: "os", reward: "🍗",
+              deliverables: ["All scheduling algos revised", "8 GATE OS PYQs", "Deadlock concepts clear"] },
+            { id: 3, phase: 1, title: "CN: Network + Transport Layer", start: "2026-09-24", end: "2026-09-27", subject: "cn", reward: "🥟",
+              deliverables: ["IP addressing, Subnetting, CIDR", "TCP/UDP concepts", "8 GATE CN PYQs"] },
+            { id: 4, phase: 1, title: "DSA: Graphs", start: "2026-09-28", end: "2026-10-01", subject: "algorithms", reward: "🍛",
+              deliverables: ["BFS, DFS implementations", "Dijkstra, Prim, Kruskal", "5 LC/GFG graph problems"] },
+            { id: 5, phase: 1, title: "DAA: Dynamic Programming", start: "2026-10-02", end: "2026-10-05", subject: "algorithms", reward: "🥟",
+              deliverables: ["College DP chapter", "10 GATE Algo PYQs (DP)", "Top-down vs Bottom-up clear"] },
+            { id: 6, phase: 1, title: "DOS: Memory Management", start: "2026-10-06", end: "2026-10-09", subject: "os", reward: "🍗",
+              deliverables: ["Paging, Virtual Memory", "Page replacement algos", "8 GATE OS PYQs"] },
+            { id: 7, phase: 1, title: "DSA: DP Part 1", start: "2026-10-10", end: "2026-10-13", subject: "algorithms", reward: "🍛",
+              deliverables: ["LCS, Knapsack, LIS", "5-7 LC problems", "Pattern recognition"] },
+            { id: 8, phase: 1, title: "CN: DLL + Application Layer", start: "2026-10-14", end: "2026-10-17", subject: "cn", reward: "🥟",
+              deliverables: ["Sliding window, Error detection", "8 GATE CN PYQs"] },
+            { id: 9, phase: 1, title: "DBMS: SQL + Normalization", start: "2026-10-18", end: "2026-10-21", subject: "dbms", reward: "🍗",
+              deliverables: ["SQL queries practice", "1NF → BCNF", "8 GATE DBMS PYQs"] },
+            { id: 10, phase: 1, title: "DSA: DP Part 2", start: "2026-10-22", end: "2026-10-25", subject: "algorithms", reward: "🍛🍛",
+              deliverables: ["5-7 more DP problems", "Graph + DP combos", "DSA COMPLETE ✅"] },
+            { id: 11, phase: 1, title: "DBMS: Transactions + B/B+ Trees", start: "2026-10-26", end: "2026-10-29", subject: "dbms", reward: "🥟",
+              deliverables: ["ACID, Serializability", "Indexing concepts", "8 GATE DBMS PYQs"] },
+            { id: 12, phase: 1, title: "General Aptitude Part 1", start: "2026-10-30", end: "2026-11-02", subject: "general-aptitude", reward: "🎯",
+              deliverables: ["Verbal + Numerical basics", "15 GA PYQs solved"] },
+            { id: 13, phase: 1, title: "GA Part 2 + Weak Areas", start: "2026-11-03", end: "2026-11-07", subject: "general-aptitude", reward: "🥟",
+              deliverables: ["15 more GA PYQs", "Revisit weak topics", "End-sem prep mindset"] },
+            // Phase 3
+            { id: 14, phase: 3, title: "Prog & DS Revival", start: "2026-11-19", end: "2026-11-22", subject: "pds", reward: "🍗",
+              deliverables: ["C concepts, Pointers revised", "Trees (BST, AVL, Heap)", "Hashing", "15 GATE PDS PYQs"] },
+            { id: 15, phase: 3, title: "Engg Maths Part 1", start: "2026-11-23", end: "2026-11-26", subject: "engg-maths", reward: "🥟",
+              deliverables: ["Discrete Math", "Linear Algebra", "10 GATE Maths PYQs"] },
+            { id: 16, phase: 3, title: "Digital Logic + Maths Part 2", start: "2026-11-27", end: "2026-11-30", subject: "digital-logic", reward: "🍛",
+              deliverables: ["Boolean algebra, K-maps", "Combinational + Sequential circuits", "Probability basics", "10 PYQs"] },
+            // Phase 4
+            { id: 17, phase: 4, title: "COA Part 1", start: "2026-12-01", end: "2026-12-04", subject: "coa", reward: "🥟",
+              deliverables: ["Cache memory", "Pipelining", "8 PYQs"] },
+            { id: 18, phase: 4, title: "COA Part 2", start: "2026-12-05", end: "2026-12-08", subject: "coa", reward: "🍗",
+              deliverables: ["I/O, DMA", "Instruction formats", "Hardwired vs Micro", "8 PYQs"] },
+            { id: 19, phase: 4, title: "TOC Part 1 (NEW)", start: "2026-12-09", end: "2026-12-12", subject: "toc", reward: "🥟",
+              deliverables: ["DFA construction", "NFA → DFA conversion", "Regular Expressions"] },
+            { id: 20, phase: 4, title: "TOC Part 2 (NEW)", start: "2026-12-13", end: "2026-12-16", subject: "toc", reward: "🍗",
+              deliverables: ["Regular language properties", "Pumping Lemma basics", "CFG intro", "5 easy PYQs"] },
+            { id: 21, phase: 4, title: "Engg Maths Part 3", start: "2026-12-17", end: "2026-12-20", subject: "engg-maths", reward: "🥟",
+              deliverables: ["Calculus revision", "Probability (Bayes, distributions)", "10 PYQs"] },
+            // Phase 5
+            { id: 22, phase: 5, title: "TOC Part 3 (NEW)", start: "2026-12-20", end: "2026-12-23", subject: "toc", reward: "🍛",
+              deliverables: ["PDA construction", "CFL properties", "5 PYQs"] },
+            { id: 23, phase: 5, title: "TOC Part 4 (NEW)", start: "2026-12-24", end: "2026-12-27", subject: "toc", reward: "🎄",
+              deliverables: ["Turing Machines", "Decidability / Undecidability", "5 PYQs", "TOC DONE ✅"] },
+            { id: 24, phase: 5, title: "🎯 MOCK TEST 1", start: "2026-12-28", end: "2026-12-31", subject: null, reward: "🍛🍛",
+              deliverables: ["Full 3-hr timed mock", "Detailed analysis", "Weak areas list"] },
+            { id: 25, phase: 5, title: "Weak Area Fix + GA", start: "2027-01-01", end: "2027-01-03", subject: "general-aptitude", reward: "🎆",
+              deliverables: ["Fix top 3 weak topics", "10 GA PYQs", "New year, new grind"] },
+            // Phase 6
+            { id: 26, phase: 6, title: "Full Rapid Revision", start: "2027-01-03", end: "2027-01-07", subject: null, reward: "🥟",
+              deliverables: ["All subjects rapid fire", "Formula sheet started"] },
+            { id: 27, phase: 6, title: "🎯 MOCK TEST 2", start: "2027-01-08", end: "2027-01-11", subject: null, reward: "🍗",
+              deliverables: ["Full mock", "Score comparison with Mock 1", "Weak areas fix"] },
+            { id: 28, phase: 6, title: "PYQ Marathon 2024-2026", start: "2027-01-12", end: "2027-01-15", subject: null, reward: "🍛",
+              deliverables: ["3 years papers solved", "Pattern analysis"] },
+            { id: 29, phase: 6, title: "🎯 MOCK TEST 3", start: "2027-01-16", end: "2027-01-19", subject: null, reward: "🍗🍗",
+              deliverables: ["Full mock", "Target: 55+ score", "Time management practice"] },
+            { id: 30, phase: 6, title: "PYQ Marathon 2021-2023", start: "2027-01-20", end: "2027-01-23", subject: null, reward: "🍛",
+              deliverables: ["3 more years", "Common patterns noted"] },
+            { id: 31, phase: 6, title: "Formula Sheet + Light Revision", start: "2027-01-24", end: "2027-01-27", subject: null, reward: "🥟",
+              deliverables: ["Formula sheet finalized", "Confident topics only"] },
+            { id: 32, phase: 6, title: "REST 🛌", start: "2027-01-28", end: "2027-01-30", subject: null, reward: "🥟🍗🍛🎮",
+              deliverables: ["No new topics", "Light formula review", "Momos + Genshin + Sleep"] },
+        ];
+
+        const MOCK_TESTS = [
+            { id: 1, sprint: 24, label: "Mock Test 1", targetDate: "Dec 28-31" },
+            { id: 2, sprint: 27, label: "Mock Test 2", targetDate: "Jan 8-11" },
+            { id: 3, sprint: 29, label: "Mock Test 3", targetDate: "Jan 16-19" },
+        ];
+
+        // ===== STATE =====
+        function getState() {
+            const saved = localStorage.getItem('gate2027_state');
+            return saved ? JSON.parse(saved) : { deliverables: {}, mocks: {} };
+        }
+
+        function saveState(state) {
+            localStorage.setItem('gate2027_state', JSON.stringify(state));
+        }
+
+        function isDeliverableChecked(sprintId, deliverableIndex) {
+            const state = getState();
+            const key = `s${sprintId}_d${deliverableIndex}`;
+            return state.deliverables[key] || false;
+        }
+
+        function toggleDeliverable(sprintId, deliverableIndex) {
+            const state = getState();
+            const key = `s${sprintId}_d${deliverableIndex}`;
+            state.deliverables[key] = !state.deliverables[key];
+            saveState(state);
+
+            const sprint = SPRINTS.find(s => s.id === sprintId);
+            const allChecked = sprint.deliverables.every((_, i) => isDeliverableChecked(sprintId, i));
+
+            if (allChecked) {
+                showMomosToast(sprint.reward);
+                launchConfetti();
+            }
+
+            renderAll();
+        }
+
+        function getMockScore(mockId) {
+            const state = getState();
+            return state.mocks[`mock_${mockId}`] || null;
+        }
+
+        function saveMockScore(mockId, score) {
+            const state = getState();
+            state.mocks[`mock_${mockId}`] = parseFloat(score);
+            saveState(state);
+            renderAll();
+        }
+
+        // ===== HELPERS =====
+        function today() {
+            return new Date();
+        }
+
+        function parseDate(str) {
+            return new Date(str + 'T00:00:00+05:30');
+        }
+
+        function getCurrentPhase() {
+            const now = today();
+            for (const phase of PHASES) {
+                if (now >= parseDate(phase.start) && now <= parseDate(phase.end)) return phase;
+            }
+            return PHASES[0];
+        }
+
+        function getCurrentSprint() {
+            const now = today();
+            for (const sprint of SPRINTS) {
+                if (now >= parseDate(sprint.start) && now <= parseDate(sprint.end)) return sprint;
+            }
+            // Find next upcoming sprint
+            for (const sprint of SPRINTS) {
+                if (now < parseDate(sprint.start)) return sprint;
+            }
+            return SPRINTS[SPRINTS.length - 1];
+        }
+
+        function getSprintProgress(sprint) {
+            const total = sprint.deliverables.length;
+            const done = sprint.deliverables.filter((_, i) => isDeliverableChecked(sprint.id, i)).length;
+            return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
+        }
+
+        function isSprintCompleted(sprint) {
+            return sprint.deliverables.every((_, i) => isDeliverableChecked(sprint.id, i));
+        }
+
+        function getPhaseProgress(phase) {
+            if (phase.sprintRange[0] === 0) return { done: 0, total: 0, percent: 0 };
+            const sprints = SPRINTS.filter(s => s.id >= phase.sprintRange[0] && s.id <= phase.sprintRange[1]);
+            const total = sprints.reduce((acc, s) => acc + s.deliverables.length, 0);
+            const done = sprints.reduce((acc, s) => {
+                return acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length;
+            }, 0);
+            return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
+        }
+
+        function getOverallProgress() {
+            const total = SPRINTS.reduce((acc, s) => acc + s.deliverables.length, 0);
+            const done = SPRINTS.reduce((acc, s) => {
+                return acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length;
+            }, 0);
+            return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
+        }
+
+        function getCompletedSprints() {
+            return SPRINTS.filter(s => isSprintCompleted(s)).length;
+        }
+
+        function getMomosEarned() {
+            return SPRINTS.filter(s => isSprintCompleted(s)).reduce((acc, s) => acc + s.reward.length, 0);
+        }
+
+        function getSubjectProgress(subject) {
+            const sprints = SPRINTS.filter(s => subject.sprints.includes(s.id));
+            const total = sprints.reduce((acc, s) => acc + s.deliverables.length, 0);
+            const done = sprints.reduce((acc, s) => {
+                return acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length;
+            }, 0);
+            return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
+        }
+
+        // ===== RENDER FUNCTIONS =====
+        function renderCountdown() {
+            const now = today();
+            const diff = GATE_DATE - now;
+
+            if (diff <= 0) {
+                document.getElementById('countdown').innerHTML = '<div class="countdown-item"><div class="number">🎯</div><div class="label">GATE TIME!</div></div>';
+                document.getElementById('countdown-message').textContent = 'Go crush it, Rounak!';
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('countdown').innerHTML = `
+                <div class="countdown-item">
+                    <div class="number">${days}</div>
+                    <div class="label">Days</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="number">${String(hours).padStart(2, '0')}</div>
+                    <div class="label">Hours</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="number">${String(minutes).padStart(2, '0')}</div>
+                    <div class="label">Minutes</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="number">${String(seconds).padStart(2, '0')}</div>
+                    <div class="label">Seconds</div>
+                </div>
+            `;
+
+            const messages = [
+                `${days} days. Every sprint counts.`,
+                `${days} days to prove that grinders win.`,
+                `${days} days. Momos are waiting at the finish line. 🥟`,
+                `${days} days. Not a genius? Doesn't matter. Grind > Talent.`,
+            ];
+            document.getElementById('countdown-message').textContent = messages[Math.floor(days / 7) % messages.length];
+        }
+
+        function renderStats() {
+            const overall = getOverallProgress();
+            const completedSprints = getCompletedSprints();
+            const momosEarned = getMomosEarned();
+            const currentSprint = getCurrentSprint();
+            const bestMock = Math.max(...MOCK_TESTS.map(m => getMockScore(m.id) || 0));
+
+            document.getElementById('stats-grid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">🏃</div>
+                    <div class="stat-value" style="color: var(--accent-1)">S${currentSprint.id}</div>
+                    <div class="stat-label">Current Sprint</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" style="color: var(--green)">${completedSprints}/32</div>
+                    <div class="stat-label">Sprints Done</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" style="color: var(--blue)">${Math.round(overall.percent)}%</div>
+                    <div class="stat-label">Overall Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🥟</div>
+                    <div class="stat-value" style="color: var(--yellow)">${momosEarned}</div>
+                    <div class="stat-label">Rewards Earned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-value" style="color: var(--purple)">${bestMock > 0 ? bestMock : '—'}</div>
+                    <div class="stat-label">Best Mock Score</div>
+                </div>
+            `;
+        }
+
+        function renderPhaseTimeline() {
+            const currentPhase = getCurrentPhase();
+            const now = today();
+
+            document.getElementById('phase-timeline').innerHTML = PHASES.map(phase => {
+                const progress = getPhaseProgress(phase);
+                const isActive = phase.id === currentPhase.id;
+                const isCompleted = now > parseDate(phase.end) && progress.percent === 100;
+                const isPast = now > parseDate(phase.end);
+
+                return `
+                    <div class="phase-card ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
+                        <div class="phase-num">Phase ${phase.id}</div>
+                        <div class="phase-name">${phase.name}</div>
+                        <div class="phase-dates">${phase.dates}</div>
+                        <div class="phase-progress">
+                            <div class="phase-progress-bar" style="width: ${progress.percent}%; background: ${isCompleted ? 'var(--green)' : phase.color}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCurrentSprint() {
+            const sprint = getCurrentSprint();
+            const now = today();
+            const isActive = now >= parseDate(sprint.start) && now <= parseDate(sprint.end);
+            const isRest = sprint.id === 32;
+
+            document.getElementById('current-sprint-container').innerHTML = `
+                <div class="current-sprint">
+                    <span class="sprint-badge ${isRest ? 'rest-badge' : ''}">${isActive ? '🔴 LIVE NOW' : '⏳ UP NEXT'} · Sprint ${sprint.id}</span>
+                    <h3 class="sprint-title">${sprint.title}</h3>
+                    <p class="sprint-meta">
+                        ${sprint.start.slice(5)} → ${sprint.end.slice(5)} · Phase ${sprint.phase}
+                        ${sprint.reward ? ` · Reward: ${sprint.reward}` : ''}
+                    </p>
+                    <div class="deliverables">
+                        ${sprint.deliverables.map((d, i) => `
+                            <div class="deliverable ${isDeliverableChecked(sprint.id, i) ? 'checked' : ''}"
+                                 onclick="toggleDeliverable(${sprint.id}, ${i})">
+                                <div class="checkbox">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="deliverable-text">${d}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSubjects(containerId, detailed = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = SUBJECTS.map(subject => {
+                const progress = getSubjectProgress(subject);
+                const sprintNames = SPRINTS.filter(s => subject.sprints.includes(s.id));
+                const statusText = progress.percent === 100 ? 'Complete' : progress.percent > 0 ? 'In Progress' : 'Not Started';
+                const statusColor = progress.percent === 100 ? 'var(--green)' : progress.percent > 0 ? 'var(--accent-2)' : 'var(--text-muted)';
+
+                return `
+                    <div class="subject-card">
+                        <div class="subject-top">
+                            <span class="subject-name">${subject.name}</span>
+                            <span class="subject-marks">${subject.marks} marks</span>
+                        </div>
+                        <div class="subject-bar-track">
+                            <div class="subject-bar-fill" style="width: ${progress.percent}%; background: ${subject.color}"></div>
+                        </div>
+                        <div class="subject-stats">
+                            <span>${progress.done}/${progress.total} tasks</span>
+                            <span class="subject-status">
+                                <span class="status-dot" style="background: ${statusColor}"></span>
+                                ${statusText}
+                            </span>
+                        </div>
+                        ${detailed ? `<div style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted)">
+                            Sprints: ${sprintNames.map(s => `S${s.id}`).join(', ')}
+                        </div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // Trigger animation
+            setTimeout(() => {
+                container.querySelectorAll('.subject-bar-fill').forEach(bar => {
+                    bar.style.width = bar.style.width; // Force reflow
+                });
+            }, 100);
+        }
+
+        function renderAllSprints() {
+            const container = document.getElementById('all-sprints');
+            const now = today();
+            const completedCount = getCompletedSprints();
+
+            document.getElementById('sprint-count').textContent = `${completedCount}/32 done`;
+
+            const grouped = {};
+            SPRINTS.forEach(sprint => {
+                if (!grouped[sprint.phase]) grouped[sprint.phase] = [];
+                grouped[sprint.phase].push(sprint);
+            });
+
+            // Add Phase 2 placeholder
+            const allPhases = { ...grouped };
+            if (!allPhases[2]) allPhases[2] = [];
+
+            container.innerHTML = PHASES.map(phase => {
+                const sprints = allPhases[phase.id] || [];
+                return `
+                    <div class="sprint-phase-group">
+                        <div class="sprint-phase-title">
+                            <span class="phase-dot" style="background: ${phase.color}"></span>
+                            Phase ${phase.id}: ${phase.name}
+                            <span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted)">(${phase.dates})</span>
+                        </div>
+                        ${sprints.length === 0 ? `<p style="font-size: 0.85rem; color: var(--text-muted); padding: 12px">No sprints — focus on end-sem exams! 📝</p>` : `
+                        <div class="sprints-row">
+                            ${sprints.map(sprint => {
+                                const progress = getSprintProgress(sprint);
+                                const isActive = now >= parseDate(sprint.start) && now <= parseDate(sprint.end);
+                                const completed = isSprintCompleted(sprint);
+                                return `
+                                    <div class="sprint-card ${isActive ? 'active' : ''} ${completed ? 'completed' : ''}"
+                                         onclick="openSprintModal(${sprint.id})">
+                                        <div class="sprint-card-header">
+                                            <span class="sprint-card-num">Sprint ${sprint.id}</span>
+                                            <span class="sprint-card-status">${completed ? '✅' : isActive ? '🔥' : progress.done > 0 ? '🟡' : '⬜'}</span>
+                                        </div>
+                                        <div class="sprint-card-title">${sprint.title}</div>
+                                        <div class="sprint-card-dates">${sprint.start.slice(5)} → ${sprint.end.slice(5)} · ${sprint.reward}</div>
+                                        <div class="sprint-card-progress">
+                                            <div class="sprint-card-progress-bar" style="width: ${progress.percent}%; background: ${completed ? 'var(--green)' : 'var(--accent-1)'}"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>`}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMockTests() {
+            document.getElementById('mock-grid').innerHTML = MOCK_TESTS.map(mock => {
+                const score = getMockScore(mock.id);
+                const scoreColor = score !== null ? (score >= 55 ? 'var(--green)' : score >= 40 ? 'var(--accent-2)' : 'var(--red)') : 'var(--text-muted)';
+
+                return `
+                    <div class="mock-card">
+                        <div class="mock-num">${mock.label}</div>
+                        ${score !== null ? `
+                            <div class="mock-score" style="color: ${scoreColor}">${score}/100</div>
+                            <div class="mock-date">${mock.targetDate}</div>
+                        ` : `
+                            <div class="mock-score pending">Not taken yet</div>
+                            <div class="mock-date">${mock.targetDate}</div>
+                            <div class="mock-input-group">
+                                <input type="number" min="0" max="100" step="0.5" placeholder="Score" id="mock-input-${mock.id}">
+                                <button onclick="saveMockScore(${mock.id}, document.getElementById('mock-input-${mock.id}').value)">Save</button>
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== MODAL =====
+        function openSprintModal(sprintId) {
+            const sprint = SPRINTS.find(s => s.id === sprintId);
+            const progress = getSprintProgress(sprint);
+            const subject = SUBJECTS.find(s => s.id === sprint.subject);
+
+            document.getElementById('modal-content').innerHTML = `
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <h3>Sprint ${sprint.id}: ${sprint.title}</h3>
+                <p class="modal-meta">
+                    ${sprint.start.slice(5)} → ${sprint.end.slice(5)} · Phase ${sprint.phase}
+                    ${subject ? ` · ${subject.name}` : ' · Mixed'}
+                    · Reward: ${sprint.reward}
+                </p>
+                <div style="margin-bottom: 16px">
+                    <div class="subject-bar-track">
+                        <div class="subject-bar-fill" style="width: ${progress.percent}%; background: var(--accent-1)"></div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px">${progress.done}/${progress.total} completed</div>
+                </div>
+                <div class="deliverables">
+                    ${sprint.deliverables.map((d, i) => `
+                        <div class="deliverable ${isDeliverableChecked(sprint.id, i) ? 'checked' : ''}"
+                             onclick="toggleDeliverable(${sprint.id}, ${i})">
+                            <div class="checkbox">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <span class="deliverable-text">${d}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('modal-overlay').classList.add('open');
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modal-overlay').classList.remove('open');
+        }
+
+        // ===== TAB SWITCHING =====
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.nav-tab[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // ===== CELEBRATIONS =====
+        function showMomosToast(reward) {
+            const toast = document.getElementById('momos-toast');
+            toast.textContent = `${reward} Sprint complete! Reward earned!`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function launchConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#ff6b35', '#f7c948', '#4ecdc4', '#6c5ce7', '#fd79a8', '#ff6b6b'];
+            const emojis = ['🥟', '🍗', '🍛', '🎯', '✅', '🔥'];
+
+            for (let i = 0; i < 30; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.textContent = Math.random() > 0.5 ? emojis[Math.floor(Math.random() * emojis.length)] : '●';
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.fontSize = (Math.random() * 16 + 10) + 'px';
+                piece.style.color = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                piece.style.animationDelay = Math.random() * 0.5 + 's';
+                container.appendChild(piece);
+            }
+
+            setTimeout(() => container.innerHTML = '', 4000);
+        }
+
+        // ===== RESET =====
+        function resetAllData() {
+            if (confirm('Are you sure? This will reset ALL your progress. Sab momos chale jayenge! 🥟')) {
+                localStorage.removeItem('gate2027_state');
+                renderAll();
+            }
+        }
+
+        // ===== RENDER ALL =====
+        function renderAll() {
+            renderStats();
+            renderPhaseTimeline();
+            renderCurrentSprint();
+            renderSubjects('subjects-grid-overview');
+            renderSubjects('subjects-grid-detail', true);
+            renderAllSprints();
+            renderMockTests();
+        }
+
+        // ===== INIT =====
+        renderCountdown();
+        renderAll();
+
+        // Update countdown every second
+        setInterval(renderCountdown, 1000);
+
+        // Keyboard shortcut: Escape to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
