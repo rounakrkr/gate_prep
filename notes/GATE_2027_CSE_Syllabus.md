@@ -78,6 +78,10 @@
 
 ### 3.1 Digital Logic — ~4-7 Marks
 
+> [!NOTE]
+> **GATE 2027 UPDATE**: Explicit mention of **K-maps and tabular (Quine-McCluskey) methods** added.
+> Preparation remains practically the same as previous years.
+
 | Topic | Subtopics |
 |-------|-----------|
 | **Boolean Algebra** | Laws, simplification, canonical forms (SOP, POS) |
@@ -92,6 +96,10 @@
 ---
 
 ### 3.2 Computer Organization & Architecture (COA) — ~7-10 Marks
+
+> [!NOTE]
+> **GATE 2027 UPDATE**: Refined to explicitly highlight **hardwired vs microprogrammed control**,
+> **memory interfacing**, and **cache mapping techniques**. Focus extra on these.
 
 | Topic | Subtopics |
 |-------|-----------|
@@ -224,22 +232,34 @@
 
 ### 3.9 Computer Networks (CN) — ~7-9 Marks
 
-| Topic | Subtopics |
-|-------|-----------|
-| **Concept of Layering** | OSI model (7 layers), TCP/IP model (4/5 layers), comparison |
-| **Data Link Layer** | Framing (character count, bit stuffing, byte stuffing) |
-| **Error Detection & Correction** | Parity, CRC, Hamming code, checksum |
-| **Flow Control** | Stop-and-wait, sliding window (Go-Back-N, Selective Repeat) |
-| **MAC Protocols** | ALOHA (pure, slotted), CSMA/CD, CSMA/CA |
-| **Switching** | Circuit switching, packet switching (datagram, virtual circuit) |
-| **Network Layer** | IPv4 addressing, classful & classless (CIDR), subnetting, supernetting |
-| **IPv6** | Addressing basics, comparison with IPv4 |
-| **Routing** | Distance vector (Bellman-Ford/RIP), link state (Dijkstra/OSPF), BGP (conceptual) |
-| **Network Devices** | Hubs, switches, routers, gateways |
-| **Transport Layer** | TCP vs UDP, connection management (3-way handshake), flow control (sliding window) |
-| **TCP Congestion Control** | Slow start, congestion avoidance, fast retransmit, fast recovery |
-| **Sockets** | Client-server model basics |
-| **Application Layer** | DNS, HTTP/HTTPS, FTP, SMTP, POP3, IMAP (basic concepts) |
+> [!IMPORTANT]
+> **GATE 2027 UPDATE**: CN syllabus significantly **streamlined and reduced** by IIT Madras.
+> Many topics REMOVED. Application layer restricted to **DNS and HTTP only**.
+> This means LESS to study — focus on what's left!
+
+| Topic | Subtopics | 2027 Status |
+|-------|-----------|-------------|
+| **Layering Concept** | OSI reference model, TCP/IP model layers | ✅ Kept |
+| **Error Detection & Correction** | Parity, CRC, Hamming code, checksum | ✅ Kept |
+| **Flow Control** | Stop-and-wait, sliding window (Go-Back-N, Selective Repeat) | ✅ Kept |
+| **MAC Protocols** | ALOHA (pure, slotted), CSMA/CD, CSMA/CA | ✅ Kept |
+| **Switching** | Circuit switching, packet switching (datagram, virtual circuit) | ✅ Kept |
+| **Network Layer** | IPv4 addressing, classful & classless (CIDR), subnetting, supernetting | ✅ Kept |
+| **IPv6** | Addressing basics | ✅ Kept |
+| **Routing** | Distance vector (RIP), link state (OSPF), BGP (conceptual) | ✅ Kept |
+| **Transport Layer** | TCP (connection mgmt, 3-way handshake, flow control) | ✅ Kept |
+| **TCP Congestion Control** | Slow start, congestion avoidance, fast retransmit, fast recovery | ✅ Kept |
+| **Performance Metrics** | Throughput, delay, bandwidth, utilization | 🆕 **NEW/Emphasized** |
+| **Socket API** | Client-server model, socket programming basics | 🆕 **NEW/Emphasized** |
+| **Application Layer** | **DNS, HTTP/HTTPS only** | ⚠️ **Restricted** |
+| ~~Framing~~ | ~~Character count, bit/byte stuffing~~ | ❌ **REMOVED** |
+| ~~Ethernet Bridging~~ | ~~MAC learning, spanning tree~~ | ❌ **REMOVED** |
+| ~~Flooding/Shortest-path Routing~~ | ~~Flooding algorithm~~ | ❌ **REMOVED** |
+| ~~UDP (separate)~~ | ~~UDP protocol details~~ | ❌ **REMOVED** |
+| ~~ARP~~ | ~~Address Resolution Protocol~~ | ❌ **REMOVED** |
+| ~~DHCP~~ | ~~Dynamic Host Configuration~~ | ❌ **REMOVED** |
+| ~~ICMP~~ | ~~Internet Control Message Protocol~~ | ❌ **REMOVED** |
+| ~~SMTP, FTP, Email~~ | ~~Mail & file transfer protocols~~ | ❌ **REMOVED** |
 
 > **Rounak's Status**: 🔥 College this sem (CN). Sprint 3, 8.
 
