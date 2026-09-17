@@ -790,9 +790,9 @@
         ];
 
         const MOCK_TESTS = [
-            { id: 1, sprint: 24, label: "Mock Test 1", targetDate: "Dec 28-31" },
-            { id: 2, sprint: 27, label: "Mock Test 2", targetDate: "Jan 8-11" },
-            { id: 3, sprint: 29, label: "Mock Test 3", targetDate: "Jan 16-19" },
+            { id: 1, sprint: 24, label: "Mock Test 1", targetDate: "Dec 28-31", pdf: "mocks/mock-1.pdf" },
+            { id: 2, sprint: 27, label: "Mock Test 2", targetDate: "Jan 8-11", pdf: "mocks/mock-2.pdf" },
+            { id: 3, sprint: 29, label: "Mock Test 3", targetDate: "Jan 16-19", pdf: "mocks/mock-3.pdf" },
         ];
 
         // ===== STATE (Firestore-backed with local cache) =====
@@ -1153,6 +1153,7 @@
                 const score = getMockScore(mock.id);
                 const scoreColor = score !== null ? (score >= 55 ? 'var(--green)' : score >= 40 ? 'var(--accent-2)' : 'var(--red)') : 'var(--text-muted)';
                 return `<div class="mock-card"><div class="mock-num">${mock.label}</div>
+                    <a href="${mock.pdf}" download style="display:inline-block;margin-bottom:12px;padding:8px 16px;background:rgba(108,92,231,0.15);color:var(--purple);border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;transition:all 0.3s;border:1px solid rgba(108,92,231,0.2)" onmouseover="this.style.background='rgba(108,92,231,0.25)'" onmouseout="this.style.background='rgba(108,92,231,0.15)'">📥 Download Paper</a>
                     ${score !== null ? `<div class="mock-score" style="color:${scoreColor}">${score}/100</div><div class="mock-date">${mock.targetDate}</div>` :
                     `<div class="mock-score pending">Not taken yet</div><div class="mock-date">${mock.targetDate}</div>
                     <div class="mock-input-group"><input type="number" min="0" max="100" step="0.5" placeholder="Score" id="mock-input-${mock.id}">
