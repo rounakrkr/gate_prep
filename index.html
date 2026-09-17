@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GATE 2027 — Rounak's War Room</title>
+    <title>GATE 2027 — War Room</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,13 +53,11 @@
             z-index: 0;
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-        /* ===== LAYOUT ===== */
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -68,755 +66,501 @@
             z-index: 1;
         }
 
+        /* ===== LOGIN SCREEN ===== */
+        .login-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .login-screen.hidden { display: none; }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 48px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+
+        .login-logo {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            width: 100%;
+            justify-content: center;
+        }
+
+        .google-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+        }
+
+        .google-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .google-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .login-domain {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .login-domain .domain-tag {
+            background: rgba(78, 205, 196, 0.15);
+            color: var(--green);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .login-error {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.2);
+            border-radius: 8px;
+            color: var(--red);
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .login-error.show { display: block; }
+
+        /* ===== LOADING SCREEN ===== */
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading-screen.hidden { display: none; }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-1);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== USER PROFILE ===== */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: absolute;
+            top: 32px;
+            right: 24px;
+            z-index: 10;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            cursor: pointer;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-email {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            border-color: rgba(255,107,107,0.3);
+            color: var(--red);
+            background: rgba(255,107,107,0.05);
+        }
+
         /* ===== HEADER ===== */
         header {
             padding: 32px 0 0;
             text-align: center;
+            position: relative;
         }
 
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
+        .logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 
         .logo h1 {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 2rem; font-weight: 800;
             background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.5px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: -0.5px;
         }
 
         .logo .badge {
-            background: var(--accent-gradient);
-            color: #000;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
+            background: var(--accent-gradient); color: #000;
+            font-size: 0.7rem; font-weight: 700;
+            padding: 3px 8px; border-radius: 20px; letter-spacing: 0.5px;
         }
 
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 32px;
-        }
-
-        .subtitle span {
-            color: var(--accent-1);
-            font-weight: 600;
-        }
+        .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 32px; }
+        .subtitle span { color: var(--accent-1); font-weight: 600; }
 
         /* ===== COUNTDOWN ===== */
-        .countdown-section {
-            margin-bottom: 40px;
-        }
+        .countdown-section { margin-bottom: 40px; }
 
         .countdown {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
+            display: flex; justify-content: center; gap: 16px;
+            flex-wrap: wrap; margin-bottom: 12px;
         }
 
         .countdown-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 28px;
-            min-width: 100px;
-            text-align: center;
-            backdrop-filter: blur(10px);
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px 28px; min-width: 100px;
+            text-align: center; backdrop-filter: blur(10px);
             transition: transform 0.3s, border-color 0.3s;
         }
 
-        .countdown-item:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 107, 53, 0.3);
-        }
+        .countdown-item:hover { transform: translateY(-4px); border-color: rgba(255, 107, 53, 0.3); }
 
         .countdown-item .number {
-            font-size: 2.5rem;
-            font-weight: 800;
+            font-size: 2.5rem; font-weight: 800;
             background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.1;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; line-height: 1.1;
         }
 
         .countdown-item .label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-top: 4px;
+            font-size: 0.75rem; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;
         }
 
-        .countdown-message {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
+        .countdown-message { text-align: center; color: var(--text-muted); font-size: 0.85rem; }
 
         /* ===== STATS ROW ===== */
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 48px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 48px;
         }
 
         .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 24px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s, border-color 0.3s;
-            position: relative;
-            overflow: hidden;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px 24px; text-align: center;
+            backdrop-filter: blur(10px); transition: transform 0.3s, border-color 0.3s;
+            position: relative; overflow: hidden;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .stat-card .stat-icon {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-        }
-
-        .stat-card .stat-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            line-height: 1.2;
-        }
-
-        .stat-card .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 4px;
-        }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.15); }
+        .stat-card .stat-icon { font-size: 1.5rem; margin-bottom: 8px; }
+        .stat-card .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1.2; }
+        .stat-card .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
 
         /* ===== SECTION HEADERS ===== */
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            margin-top: 48px;
-        }
-
-        .section-header h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .section-header .line {
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        .section-header .count {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            background: var(--bg-card);
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; margin-top: 48px; }
+        .section-header h2 { font-size: 1.4rem; font-weight: 700; }
+        .section-header .line { flex: 1; height: 1px; background: var(--border); }
+        .section-header .count { font-size: 0.8rem; color: var(--text-secondary); background: var(--bg-card); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); }
 
         /* ===== PHASE TIMELINE ===== */
-        .phase-timeline {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 48px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
+        .phase-timeline { display: flex; gap: 8px; margin-bottom: 48px; overflow-x: auto; padding-bottom: 8px; }
 
         .phase-card {
-            flex: 1;
-            min-width: 160px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
+            flex: 1; min-width: 160px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px; cursor: pointer; transition: all 0.3s; position: relative;
         }
 
         .phase-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            border-radius: var(--radius) var(--radius) 0 0;
-            background: var(--text-muted);
-            transition: background 0.3s;
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px; border-radius: var(--radius) var(--radius) 0 0;
+            background: var(--text-muted); transition: background 0.3s;
         }
 
         .phase-card.active::before { background: var(--accent-gradient); }
         .phase-card.completed::before { background: var(--green); }
-
-        .phase-card.active {
-            border-color: rgba(255, 107, 53, 0.3);
-            background: rgba(255, 107, 53, 0.05);
-        }
-
-        .phase-card.completed {
-            border-color: rgba(78, 205, 196, 0.2);
-        }
-
-        .phase-card .phase-num {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .phase-card .phase-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-            line-height: 1.3;
-        }
-
-        .phase-card .phase-dates {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .phase-card .phase-progress {
-            margin-top: 10px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .phase-card .phase-progress-bar {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.8s ease;
-        }
+        .phase-card.active { border-color: rgba(255, 107, 53, 0.3); background: rgba(255, 107, 53, 0.05); }
+        .phase-card.completed { border-color: rgba(78, 205, 196, 0.2); }
+        .phase-card .phase-num { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .phase-card .phase-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; line-height: 1.3; }
+        .phase-card .phase-dates { font-size: 0.75rem; color: var(--text-secondary); }
+        .phase-card .phase-progress { margin-top: 10px; height: 4px; background: rgba(255, 255, 255, 0.06); border-radius: 2px; overflow: hidden; }
+        .phase-card .phase-progress-bar { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
 
         /* ===== CURRENT SPRINT ===== */
         .current-sprint {
             background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(247, 201, 72, 0.05));
-            border: 1px solid rgba(255, 107, 53, 0.2);
-            border-radius: var(--radius);
-            padding: 32px;
-            margin-bottom: 48px;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid rgba(255, 107, 53, 0.2); border-radius: var(--radius);
+            padding: 32px; margin-bottom: 48px; position: relative; overflow: hidden;
         }
 
-        .current-sprint::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: var(--accent-gradient);
-        }
+        .current-sprint::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--accent-gradient); }
 
         .current-sprint .sprint-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--accent-gradient);
-            color: #000;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--accent-gradient); color: #000;
+            font-size: 0.75rem; font-weight: 700; padding: 4px 12px;
+            border-radius: 20px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
         }
 
-        .current-sprint .sprint-badge.rest-badge {
-            background: linear-gradient(135deg, var(--green), var(--cyan));
-        }
+        .current-sprint .sprint-badge.rest-badge { background: linear-gradient(135deg, var(--green), var(--cyan)); }
+        .current-sprint .sprint-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+        .current-sprint .sprint-meta { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; }
+        .current-sprint .sprint-meta span { color: var(--accent-2); }
 
-        .current-sprint .sprint-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .current-sprint .sprint-meta {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        .current-sprint .sprint-meta span {
-            color: var(--accent-2);
-        }
-
-        .deliverables {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .deliverables { display: flex; flex-direction: column; gap: 10px; }
 
         .deliverable {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: background 0.2s;
-            user-select: none;
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm); cursor: pointer;
+            transition: background 0.2s; user-select: none;
         }
 
-        .deliverable:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .deliverable.checked {
-            opacity: 0.6;
-        }
-
-        .deliverable.checked .deliverable-text {
-            text-decoration: line-through;
-            color: var(--text-muted);
-        }
+        .deliverable:hover { background: rgba(255, 255, 255, 0.06); }
+        .deliverable.checked { opacity: 0.6; }
+        .deliverable.checked .deliverable-text { text-decoration: line-through; color: var(--text-muted); }
 
         .checkbox {
-            width: 22px;
-            height: 22px;
-            border: 2px solid var(--text-muted);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.3s;
+            width: 22px; height: 22px; border: 2px solid var(--text-muted);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all 0.3s;
         }
 
-        .deliverable.checked .checkbox {
-            background: var(--accent-gradient);
-            border-color: transparent;
-        }
+        .deliverable.checked .checkbox { background: var(--accent-gradient); border-color: transparent; }
 
-        .checkbox svg {
-            width: 14px;
-            height: 14px;
-            opacity: 0;
-            transform: scale(0);
-            transition: all 0.3s;
-        }
-
-        .deliverable.checked .checkbox svg {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .deliverable-text {
-            font-size: 0.95rem;
-            transition: all 0.3s;
-        }
+        .checkbox svg { width: 14px; height: 14px; opacity: 0; transform: scale(0); transition: all 0.3s; }
+        .deliverable.checked .checkbox svg { opacity: 1; transform: scale(1); }
+        .deliverable-text { font-size: 0.95rem; transition: all 0.3s; }
 
         /* ===== SUBJECT PROGRESS ===== */
-        .subjects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 16px;
-            margin-bottom: 48px;
-        }
+        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-bottom: 48px; }
 
         .subject-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px;
             transition: transform 0.3s, border-color 0.3s;
         }
 
-        .subject-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .subject-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .subject-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .subject-marks {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            background: rgba(255, 255, 255, 0.05);
-            padding: 2px 8px;
-            border-radius: 12px;
-        }
-
-        .subject-bar-track {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .subject-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 1s ease;
-            width: 0;
-        }
-
-        .subject-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .subject-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
+        .subject-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.15); }
+        .subject-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .subject-name { font-weight: 600; font-size: 0.95rem; }
+        .subject-marks { font-size: 0.75rem; color: var(--text-secondary); background: rgba(255, 255, 255, 0.05); padding: 2px 8px; border-radius: 12px; }
+        .subject-bar-track { height: 6px; background: rgba(255, 255, 255, 0.06); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .subject-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; width: 0; }
+        .subject-stats { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); }
+        .subject-status { display: inline-flex; align-items: center; gap: 4px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
 
         /* ===== ALL SPRINTS ===== */
-        .sprint-phase-group {
-            margin-bottom: 32px;
-        }
-
-        .sprint-phase-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sprint-phase-title .phase-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .sprints-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 12px;
-        }
+        .sprint-phase-group { margin-bottom: 32px; }
+        .sprint-phase-title { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .sprint-phase-title .phase-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sprints-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 
         .sprint-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 16px; cursor: pointer;
+            transition: all 0.3s; position: relative;
         }
 
-        .sprint-card:hover {
-            background: var(--bg-card-hover);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
+        .sprint-card:hover { background: var(--bg-card-hover); border-color: rgba(255, 255, 255, 0.15); }
+        .sprint-card.active { border-color: rgba(255, 107, 53, 0.3); background: rgba(255, 107, 53, 0.04); }
+        .sprint-card.completed { border-color: rgba(78, 205, 196, 0.2); }
+        .sprint-card.completed .sprint-card-title { color: var(--text-secondary); }
+        .sprint-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .sprint-card-num { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+        .sprint-card-status { font-size: 0.85rem; }
+        .sprint-card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; line-height: 1.3; }
+        .sprint-card-dates { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+        .sprint-card-progress { height: 3px; background: rgba(255, 255, 255, 0.06); border-radius: 2px; overflow: hidden; }
+        .sprint-card-progress-bar { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
 
-        .sprint-card.active {
-            border-color: rgba(255, 107, 53, 0.3);
-            background: rgba(255, 107, 53, 0.04);
-        }
-
-        .sprint-card.completed {
-            border-color: rgba(78, 205, 196, 0.2);
-        }
-
-        .sprint-card.completed .sprint-card-title {
-            color: var(--text-secondary);
-        }
-
-        .sprint-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 6px;
-        }
-
-        .sprint-card-num {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .sprint-card-status {
-            font-size: 0.85rem;
-        }
-
-        .sprint-card-title {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 4px;
-            line-height: 1.3;
-        }
-
-        .sprint-card-dates {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-        }
-
-        .sprint-card-progress {
-            height: 3px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .sprint-card-progress-bar {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s ease;
-        }
-
-        /* Sprint detail modal */
+        /* ===== MODAL ===== */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            z-index: 100; align-items: center; justify-content: center; padding: 24px;
         }
 
-        .modal-overlay.open {
-            display: flex;
-        }
+        .modal-overlay.open { display: flex; }
 
         .modal {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 32px; max-width: 500px;
+            width: 100%; max-height: 80vh; overflow-y: auto; position: relative;
             animation: modalIn 0.3s ease;
         }
 
-        @keyframes modalIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
         .modal-close {
-            position: absolute;
-            top: 16px; right: 16px;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: background 0.2s;
+            position: absolute; top: 16px; right: 16px; background: none;
+            border: none; color: var(--text-secondary); font-size: 1.5rem;
+            cursor: pointer; width: 32px; height: 32px; display: flex;
+            align-items: center; justify-content: center; border-radius: 8px; transition: background 0.2s;
         }
 
         .modal-close:hover { background: rgba(255,255,255,0.1); }
+        .modal h3 { font-size: 1.2rem; margin-bottom: 4px; padding-right: 32px; }
+        .modal .modal-meta { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; }
 
-        .modal h3 {
-            font-size: 1.2rem;
-            margin-bottom: 4px;
-            padding-right: 32px;
-        }
+        /* ===== MOCK TESTS ===== */
+        .mock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .mock-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; }
+        .mock-card .mock-num { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .mock-card .mock-score { font-size: 2.5rem; font-weight: 800; margin-bottom: 4px; }
+        .mock-card .mock-score.pending { color: var(--text-muted); font-size: 1.5rem; }
+        .mock-card .mock-date { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
 
-        .modal .modal-meta {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        /* ===== MOCK TEST SECTION ===== */
-        .mock-tests {
-            margin-bottom: 48px;
-        }
-
-        .mock-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .mock-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            text-align: center;
-        }
-
-        .mock-card .mock-num {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .mock-card .mock-score {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-
-        .mock-card .mock-score.pending {
-            color: var(--text-muted);
-            font-size: 1.5rem;
-        }
-
-        .mock-card .mock-date {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        .mock-input-group {
-            display: flex;
-            gap: 8px;
-        }
-
+        .mock-input-group { display: flex; gap: 8px; }
         .mock-input-group input {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            text-align: center;
-            outline: none;
-            transition: border-color 0.3s;
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 8px; padding: 8px 12px; color: var(--text-primary);
+            font-size: 0.9rem; text-align: center; outline: none; transition: border-color 0.3s;
         }
-
-        .mock-input-group input:focus {
-            border-color: var(--accent-1);
-        }
-
+        .mock-input-group input:focus { border-color: var(--accent-1); }
         .mock-input-group button {
-            background: var(--accent-gradient);
-            border: none;
-            color: #000;
-            font-weight: 700;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: opacity 0.3s;
+            background: var(--accent-gradient); border: none; color: #000;
+            font-weight: 700; padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-size: 0.85rem; transition: opacity 0.3s;
         }
-
         .mock-input-group button:hover { opacity: 0.85; }
 
-        /* ===== FORMULA SHEETS ===== */
-        .formula-section { margin-bottom: 48px; }
-
-        /* ===== MOMOS CELEBRATION ===== */
+        /* ===== CELEBRATIONS ===== */
         .momos-toast {
-            position: fixed;
-            bottom: 32px;
-            right: 32px;
+            position: fixed; bottom: 32px; right: 32px;
             background: linear-gradient(135deg, rgba(255, 107, 53, 0.95), rgba(247, 201, 72, 0.95));
-            color: #000;
-            padding: 16px 24px;
-            border-radius: var(--radius);
-            font-weight: 700;
-            font-size: 1rem;
-            z-index: 200;
-            transform: translateY(100px);
-            opacity: 0;
+            color: #000; padding: 16px 24px; border-radius: var(--radius);
+            font-weight: 700; font-size: 1rem; z-index: 200;
+            transform: translateY(100px); opacity: 0;
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
         }
 
-        .momos-toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
+        .momos-toast.show { transform: translateY(0); opacity: 1; }
 
-        /* ===== CONFETTI ===== */
-        .confetti-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 300;
-            overflow: hidden;
-        }
-
-        .confetti-piece {
-            position: absolute;
-            top: -10px;
-            animation: confettiFall 3s ease-in forwards;
-        }
-
-        @keyframes confettiFall {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 300; overflow: hidden; }
+        .confetti-piece { position: absolute; top: -10px; animation: confettiFall 3s ease-in forwards; }
+        @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 
         /* ===== FOOTER ===== */
-        footer {
-            text-align: center;
-            padding: 48px 0 32px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            border-top: 1px solid var(--border);
-            margin-top: 48px;
+        footer { text-align: center; padding: 48px 0 32px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 48px; }
+        footer .quote { font-style: italic; color: var(--text-secondary); margin-bottom: 8px; font-size: 0.9rem; }
+
+        /* ===== NAV TABS ===== */
+        .nav-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+
+        .nav-tab {
+            padding: 8px 20px; border-radius: 24px; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s; border: 1px solid var(--border);
+            background: var(--bg-card); color: var(--text-secondary);
         }
 
-        footer .quote {
-            font-style: italic;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            font-size: 0.9rem;
+        .nav-tab:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+        .nav-tab.active { background: var(--accent-gradient); color: #000; border-color: transparent; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInUp 0.4s ease; }
+
+        .reset-btn {
+            background: none; border: 1px solid rgba(255,107,107,0.3); color: var(--red);
+            padding: 6px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 0.75rem; transition: all 0.3s; margin-top: 8px;
         }
+        .reset-btn:hover { background: rgba(255,107,107,0.1); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeInUp 0.6s ease forwards; opacity: 0; }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
@@ -833,126 +577,57 @@
             .subjects-grid { grid-template-columns: 1fr; }
             .sprints-row { grid-template-columns: 1fr; }
             .mock-grid { grid-template-columns: 1fr; }
-        }
-
-        /* ===== ANIMATIONS ===== */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-in {
-            animation: fadeInUp 0.6s ease forwards;
-            opacity: 0;
-        }
-
-        .nav-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-        }
-
-        .nav-tab {
-            padding: 8px 20px;
-            border-radius: 24px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-        }
-
-        .nav-tab:hover {
-            background: var(--bg-card-hover);
-            color: var(--text-primary);
-        }
-
-        .nav-tab.active {
-            background: var(--accent-gradient);
-            color: #000;
-            border-color: transparent;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeInUp 0.4s ease;
-        }
-
-        /* Quick actions */
-        .quick-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-
-        .quick-action-btn {
-            padding: 8px 18px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-        }
-
-        .quick-action-btn:hover {
-            background: rgba(255,107,53,0.1);
-            border-color: rgba(255,107,53,0.3);
-            color: var(--accent-1);
-        }
-
-        .reset-btn {
-            background: none;
-            border: 1px solid rgba(255,107,107,0.3);
-            color: var(--red);
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            transition: all 0.3s;
-            margin-top: 8px;
-        }
-
-        .reset-btn:hover {
-            background: rgba(255,107,107,0.1);
+            .user-profile { position: relative; top: 0; right: 0; justify-content: center; margin-bottom: 16px; }
+            .login-card { padding: 32px 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- HEADER -->
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">🎯</div>
+            <h2 class="login-title">GATE 2027</h2>
+            <p class="login-subtitle">War Room — For KIIT CSE Warriors</p>
+            <button class="google-btn" id="google-btn" onclick="handleLogin()">
+                <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Sign in with Google
+            </button>
+            <div class="login-domain">
+                🔒 Only <span class="domain-tag">@kiit.ac.in</span> accounts
+            </div>
+            <div class="login-error" id="login-error"></div>
+        </div>
+    </div>
+
+    <!-- LOADING SCREEN -->
+    <div class="loading-screen hidden" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading your progress...</div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="container" id="app" style="display:none">
         <header>
+            <!-- USER PROFILE -->
+            <div class="user-profile" id="user-profile"></div>
+
             <div class="logo">
                 <h1>🎯 GATE 2027</h1>
                 <span class="badge">WAR ROOM</span>
             </div>
             <p class="subtitle">
-                <span>Rounak KR</span> · KIIT CSE · Prepare 80 · Attempt 65 · Score 55+
+                <span id="user-display-name">—</span> · KIIT CSE · Prepare 80 · Attempt 65 · Score 55+
             </p>
         </header>
 
-        <!-- COUNTDOWN -->
         <section class="countdown-section animate-in">
             <div class="countdown" id="countdown"></div>
             <p class="countdown-message" id="countdown-message"></p>
         </section>
 
-        <!-- STATS -->
         <section class="stats-grid animate-in" style="animation-delay: 0.1s" id="stats-grid"></section>
 
-        <!-- NAV TABS -->
         <nav class="nav-tabs">
             <div class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</div>
             <div class="nav-tab" data-tab="sprints" onclick="switchTab('sprints')">🏃 Sprints</div>
@@ -960,78 +635,65 @@
             <div class="nav-tab" data-tab="mocks" onclick="switchTab('mocks')">📝 Mock Tests</div>
         </nav>
 
-        <!-- TAB: DASHBOARD -->
         <div class="tab-content active" id="tab-dashboard">
-            <!-- PHASE TIMELINE -->
-            <div class="section-header">
-                <h2>⚡ Phases</h2>
-                <div class="line"></div>
-            </div>
+            <div class="section-header"><h2>⚡ Phases</h2><div class="line"></div></div>
             <div class="phase-timeline" id="phase-timeline"></div>
-
-            <!-- CURRENT SPRINT -->
-            <div class="section-header">
-                <h2>🔥 Current Sprint</h2>
-                <div class="line"></div>
-            </div>
+            <div class="section-header"><h2>🔥 Current Sprint</h2><div class="line"></div></div>
             <div id="current-sprint-container"></div>
-
-            <!-- SUBJECT PROGRESS OVERVIEW -->
-            <div class="section-header">
-                <h2>📚 Subject Progress</h2>
-                <div class="line"></div>
-            </div>
+            <div class="section-header"><h2>📚 Subject Progress</h2><div class="line"></div></div>
             <div class="subjects-grid" id="subjects-grid-overview"></div>
         </div>
 
-        <!-- TAB: SPRINTS -->
         <div class="tab-content" id="tab-sprints">
-            <div class="section-header">
-                <h2>🏃 All Sprints</h2>
-                <div class="line"></div>
-                <span class="count" id="sprint-count"></span>
-            </div>
+            <div class="section-header"><h2>🏃 All Sprints</h2><div class="line"></div><span class="count" id="sprint-count"></span></div>
             <div id="all-sprints"></div>
         </div>
 
-        <!-- TAB: SUBJECTS -->
         <div class="tab-content" id="tab-subjects">
-            <div class="section-header">
-                <h2>📚 Subject Breakdown</h2>
-                <div class="line"></div>
-            </div>
+            <div class="section-header"><h2>📚 Subject Breakdown</h2><div class="line"></div></div>
             <div class="subjects-grid" id="subjects-grid-detail"></div>
         </div>
 
-        <!-- TAB: MOCKS -->
         <div class="tab-content" id="tab-mocks">
-            <div class="section-header">
-                <h2>📝 Mock Tests</h2>
-                <div class="line"></div>
-            </div>
+            <div class="section-header"><h2>📝 Mock Tests</h2><div class="line"></div></div>
             <div class="mock-grid" id="mock-grid"></div>
         </div>
 
-        <!-- FOOTER -->
         <footer>
-            <p class="quote">"I'm not a genius. I just grind." — Rounak</p>
+            <p class="quote">"I'm not a genius. I just grind."</p>
             <p>GATE 2027 War Room · Built with 🥟 and determination</p>
             <button class="reset-btn" onclick="resetAllData()">Reset All Data</button>
         </footer>
     </div>
 
-    <!-- MODAL -->
     <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
         <div class="modal" id="modal-content"></div>
     </div>
 
-    <!-- MOMOS TOAST -->
     <div class="momos-toast" id="momos-toast">🥟 Sprint complete! Momos earned!</div>
-
-    <!-- CONFETTI CONTAINER -->
     <div class="confetti-container" id="confetti-container"></div>
 
-    <script>
+    <script type="module">
+        // ===== FIREBASE =====
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwzWrAegnB0_X0O9wj8Vcu1-WogyibeBY",
+            authDomain: "gate-prep-b1d7a.firebaseapp.com",
+            projectId: "gate-prep-b1d7a",
+            storageBucket: "gate-prep-b1d7a.firebasestorage.app",
+            messagingSenderId: "720399672619",
+            appId: "1:720399672619:web:bdcf32c07df3cf4355d16e",
+            measurementId: "G-RNE061V31F"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
         // ===== DATA =====
         const GATE_DATE = new Date('2027-02-06T09:00:00+05:30');
 
@@ -1132,29 +794,74 @@
             { id: 3, sprint: 29, label: "Mock Test 3", targetDate: "Jan 16-19" },
         ];
 
+        // ===== STATE (Firestore-backed with local cache) =====
+        let localState = { deliverables: {}, mocks: {} };
+        let currentUser = null;
         let currentModalSprintId = null;
+        let savingTimeout = null;
 
-        // ===== STATE =====
         function getState() {
-            const saved = localStorage.getItem('gate2027_state');
-            return saved ? JSON.parse(saved) : { deliverables: {}, mocks: {} };
+            return localState;
         }
 
-        function saveState(state) {
-            localStorage.setItem('gate2027_state', JSON.stringify(state));
+        async function saveStateToCloud() {
+            if (!currentUser) return;
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    email: currentUser.email,
+                    name: currentUser.displayName,
+                    photoURL: currentUser.photoURL,
+                    deliverables: localState.deliverables,
+                    mocks: localState.mocks,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+            }
+        }
+
+        function debouncedSave() {
+            clearTimeout(savingTimeout);
+            savingTimeout = setTimeout(() => saveStateToCloud(), 500);
+        }
+
+        async function loadStateFromCloud(uid) {
+            try {
+                const docSnap = await getDoc(doc(db, "users", uid));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    localState = {
+                        deliverables: data.deliverables || {},
+                        mocks: data.mocks || {}
+                    };
+                } else {
+                    // Check localStorage for migration
+                    const saved = localStorage.getItem('gate2027_state');
+                    if (saved) {
+                        localState = JSON.parse(saved);
+                        await saveStateToCloud();
+                        localStorage.removeItem('gate2027_state');
+                    } else {
+                        localState = { deliverables: {}, mocks: {} };
+                    }
+                    // Create user doc
+                    await saveStateToCloud();
+                }
+            } catch (e) {
+                console.error("Load error:", e);
+                localState = { deliverables: {}, mocks: {} };
+            }
         }
 
         function isDeliverableChecked(sprintId, deliverableIndex) {
-            const state = getState();
             const key = `s${sprintId}_d${deliverableIndex}`;
-            return state.deliverables[key] || false;
+            return localState.deliverables[key] || false;
         }
 
         function toggleDeliverable(sprintId, deliverableIndex) {
-            const state = getState();
             const key = `s${sprintId}_d${deliverableIndex}`;
-            state.deliverables[key] = !state.deliverables[key];
-            saveState(state);
+            localState.deliverables[key] = !localState.deliverables[key];
+            debouncedSave();
 
             const sprint = SPRINTS.find(s => s.id === sprintId);
             const allChecked = sprint.deliverables.every((_, i) => isDeliverableChecked(sprintId, i));
@@ -1165,32 +872,103 @@
             }
 
             renderAll();
-            // Re-render modal if open
             if (currentModalSprintId !== null) {
                 openSprintModal(currentModalSprintId);
             }
         }
 
         function getMockScore(mockId) {
-            const state = getState();
-            return state.mocks[`mock_${mockId}`] || null;
+            return localState.mocks[`mock_${mockId}`] || null;
         }
 
         function saveMockScore(mockId, score) {
-            const state = getState();
-            state.mocks[`mock_${mockId}`] = parseFloat(score);
-            saveState(state);
+            if (!score || isNaN(score)) return;
+            localState.mocks[`mock_${mockId}`] = parseFloat(score);
+            debouncedSave();
             renderAll();
         }
 
-        // ===== HELPERS =====
-        function today() {
-            return new Date();
+        // ===== AUTH =====
+        async function handleLogin() {
+            const btn = document.getElementById('google-btn');
+            const errorDiv = document.getElementById('login-error');
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            errorDiv.classList.remove('show');
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const email = result.user.email;
+
+                if (!email.endsWith('@kiit.ac.in')) {
+                    await signOut(auth);
+                    errorDiv.textContent = `❌ "${email}" is not a KIIT account. Only @kiit.ac.in emails are allowed.`;
+                    errorDiv.classList.add('show');
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Sign in with Google`;
+                    return;
+                }
+                // Auth state listener will handle the rest
+            } catch (e) {
+                console.error("Auth error:", e);
+                errorDiv.textContent = `Error: ${e.message}`;
+                errorDiv.classList.add('show');
+                btn.disabled = false;
+                btn.innerHTML = `<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Sign in with Google`;
+            }
         }
 
-        function parseDate(str) {
-            return new Date(str + 'T00:00:00+05:30');
+        function handleLogout() {
+            signOut(auth);
         }
+
+        // ===== AUTH STATE LISTENER =====
+        onAuthStateChanged(auth, async (user) => {
+            if (user && user.email.endsWith('@kiit.ac.in')) {
+                currentUser = user;
+
+                // Show loading
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('loading-screen').classList.remove('hidden');
+                document.getElementById('app').style.display = 'none';
+
+                // Load data
+                await loadStateFromCloud(user.uid);
+
+                // Show app
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('app').style.display = 'block';
+
+                // User profile
+                document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
+                document.getElementById('user-profile').innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${user.displayName || 'Student'}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                    ${user.photoURL ? `<img class="user-avatar" src="${user.photoURL}" alt="avatar" referrerpolicy="no-referrer">` : ''}
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                `;
+
+                renderCountdown();
+                renderAll();
+                setInterval(renderCountdown, 1000);
+            } else {
+                // Signed out or non-KIIT
+                currentUser = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('app').style.display = 'none';
+
+                if (user && !user.email.endsWith('@kiit.ac.in')) {
+                    await signOut(auth);
+                }
+            }
+        });
+
+        // ===== HELPERS =====
+        function today() { return new Date(); }
+        function parseDate(str) { return new Date(str + 'T00:00:00+05:30'); }
 
         function getCurrentPhase() {
             const now = today();
@@ -1202,22 +980,16 @@
 
         function getCurrentSprint() {
             const now = today();
-            // Find the date-based current sprint
             let current = null;
             for (const sprint of SPRINTS) {
-                if (now >= parseDate(sprint.start) && now <= parseDate(sprint.end)) {
-                    current = sprint;
-                    break;
-                }
+                if (now >= parseDate(sprint.start) && now <= parseDate(sprint.end)) { current = sprint; break; }
             }
-            // If current sprint is completed, find next incomplete one
             if (current && isSprintCompleted(current)) {
                 for (const sprint of SPRINTS) {
                     if (sprint.id > current.id && !isSprintCompleted(sprint)) return sprint;
                 }
             }
             if (current) return current;
-            // Find next upcoming sprint that's not completed
             for (const sprint of SPRINTS) {
                 if (now < parseDate(sprint.start) && !isSprintCompleted(sprint)) return sprint;
             }
@@ -1238,34 +1010,23 @@
             if (phase.sprintRange[0] === 0) return { done: 0, total: 0, percent: 0 };
             const sprints = SPRINTS.filter(s => s.id >= phase.sprintRange[0] && s.id <= phase.sprintRange[1]);
             const total = sprints.reduce((acc, s) => acc + s.deliverables.length, 0);
-            const done = sprints.reduce((acc, s) => {
-                return acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length;
-            }, 0);
+            const done = sprints.reduce((acc, s) => acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length, 0);
             return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
         }
 
         function getOverallProgress() {
             const total = SPRINTS.reduce((acc, s) => acc + s.deliverables.length, 0);
-            const done = SPRINTS.reduce((acc, s) => {
-                return acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length;
-            }, 0);
+            const done = SPRINTS.reduce((acc, s) => acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length, 0);
             return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
         }
 
-        function getCompletedSprints() {
-            return SPRINTS.filter(s => isSprintCompleted(s)).length;
-        }
-
-        function getMomosEarned() {
-            return SPRINTS.filter(s => isSprintCompleted(s)).reduce((acc, s) => acc + s.reward.length, 0);
-        }
+        function getCompletedSprints() { return SPRINTS.filter(s => isSprintCompleted(s)).length; }
+        function getMomosEarned() { return SPRINTS.filter(s => isSprintCompleted(s)).reduce((acc, s) => acc + s.reward.length, 0); }
 
         function getSubjectProgress(subject) {
             const sprints = SPRINTS.filter(s => subject.sprints.includes(s.id));
             const total = sprints.reduce((acc, s) => acc + s.deliverables.length, 0);
-            const done = sprints.reduce((acc, s) => {
-                return acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length;
-            }, 0);
+            const done = sprints.reduce((acc, s) => acc + s.deliverables.filter((_, i) => isDeliverableChecked(s.id, i)).length, 0);
             return { done, total, percent: total > 0 ? (done / total) * 100 : 0 };
         }
 
@@ -1273,43 +1034,23 @@
         function renderCountdown() {
             const now = today();
             const diff = GATE_DATE - now;
-
             if (diff <= 0) {
                 document.getElementById('countdown').innerHTML = '<div class="countdown-item"><div class="number">🎯</div><div class="label">GATE TIME!</div></div>';
-                document.getElementById('countdown-message').textContent = 'Go crush it, Rounak!';
+                document.getElementById('countdown-message').textContent = 'Go crush it!';
                 return;
             }
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            const days = Math.floor(diff / (1000*60*60*24));
+            const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+            const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
+            const seconds = Math.floor((diff % (1000*60)) / 1000);
 
             document.getElementById('countdown').innerHTML = `
-                <div class="countdown-item">
-                    <div class="number">${days}</div>
-                    <div class="label">Days</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="number">${String(hours).padStart(2, '0')}</div>
-                    <div class="label">Hours</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="number">${String(minutes).padStart(2, '0')}</div>
-                    <div class="label">Minutes</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="number">${String(seconds).padStart(2, '0')}</div>
-                    <div class="label">Seconds</div>
-                </div>
+                <div class="countdown-item"><div class="number">${days}</div><div class="label">Days</div></div>
+                <div class="countdown-item"><div class="number">${String(hours).padStart(2,'0')}</div><div class="label">Hours</div></div>
+                <div class="countdown-item"><div class="number">${String(minutes).padStart(2,'0')}</div><div class="label">Minutes</div></div>
+                <div class="countdown-item"><div class="number">${String(seconds).padStart(2,'0')}</div><div class="label">Seconds</div></div>
             `;
-
-            const messages = [
-                `${days} days. Every sprint counts.`,
-                `${days} days to prove that grinders win.`,
-                `${days} days. Momos are waiting at the finish line. 🥟`,
-                `${days} days. Not a genius? Doesn't matter. Grind > Talent.`,
-            ];
+            const messages = [`${days} days. Every sprint counts.`,`${days} days to prove that grinders win.`,`${days} days. Momos are waiting at the finish line. 🥟`,`${days} days. Not a genius? Doesn't matter. Grind > Talent.`];
             document.getElementById('countdown-message').textContent = messages[Math.floor(days / 7) % messages.length];
         }
 
@@ -1319,56 +1060,27 @@
             const momosEarned = getMomosEarned();
             const currentSprint = getCurrentSprint();
             const bestMock = Math.max(...MOCK_TESTS.map(m => getMockScore(m.id) || 0));
-
             document.getElementById('stats-grid').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-icon">🏃</div>
-                    <div class="stat-value" style="color: var(--accent-1)">S${currentSprint.id}</div>
-                    <div class="stat-label">Current Sprint</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-value" style="color: var(--green)">${completedSprints}/32</div>
-                    <div class="stat-label">Sprints Done</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-value" style="color: var(--blue)">${Math.round(overall.percent)}%</div>
-                    <div class="stat-label">Overall Progress</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🥟</div>
-                    <div class="stat-value" style="color: var(--yellow)">${momosEarned}</div>
-                    <div class="stat-label">Rewards Earned</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📝</div>
-                    <div class="stat-value" style="color: var(--purple)">${bestMock > 0 ? bestMock : '—'}</div>
-                    <div class="stat-label">Best Mock Score</div>
-                </div>
+                <div class="stat-card"><div class="stat-icon">🏃</div><div class="stat-value" style="color:var(--accent-1)">S${currentSprint.id}</div><div class="stat-label">Current Sprint</div></div>
+                <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--green)">${completedSprints}/32</div><div class="stat-label">Sprints Done</div></div>
+                <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" style="color:var(--blue)">${Math.round(overall.percent)}%</div><div class="stat-label">Overall Progress</div></div>
+                <div class="stat-card"><div class="stat-icon">🥟</div><div class="stat-value" style="color:var(--yellow)">${momosEarned}</div><div class="stat-label">Rewards Earned</div></div>
+                <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value" style="color:var(--purple)">${bestMock > 0 ? bestMock : '—'}</div><div class="stat-label">Best Mock</div></div>
             `;
         }
 
         function renderPhaseTimeline() {
             const currentPhase = getCurrentPhase();
             const now = today();
-
             document.getElementById('phase-timeline').innerHTML = PHASES.map(phase => {
                 const progress = getPhaseProgress(phase);
                 const isActive = phase.id === currentPhase.id;
                 const isCompleted = now > parseDate(phase.end) && progress.percent === 100;
-                const isPast = now > parseDate(phase.end);
-
-                return `
-                    <div class="phase-card ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}">
-                        <div class="phase-num">Phase ${phase.id}</div>
-                        <div class="phase-name">${phase.name}</div>
-                        <div class="phase-dates">${phase.dates}</div>
-                        <div class="phase-progress">
-                            <div class="phase-progress-bar" style="width: ${progress.percent}%; background: ${isCompleted ? 'var(--green)' : phase.color}"></div>
-                        </div>
-                    </div>
-                `;
+                return `<div class="phase-card ${isActive?'active':''} ${isCompleted?'completed':''}">
+                    <div class="phase-num">Phase ${phase.id}</div><div class="phase-name">${phase.name}</div>
+                    <div class="phase-dates">${phase.dates}</div>
+                    <div class="phase-progress"><div class="phase-progress-bar" style="width:${progress.percent}%;background:${isCompleted?'var(--green)':phase.color}"></div></div>
+                </div>`;
             }).join('');
         }
 
@@ -1377,121 +1089,61 @@
             const now = today();
             const isActive = now >= parseDate(sprint.start) && now <= parseDate(sprint.end);
             const isRest = sprint.id === 32;
-
+            const checkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             document.getElementById('current-sprint-container').innerHTML = `
                 <div class="current-sprint">
-                    <span class="sprint-badge ${isRest ? 'rest-badge' : ''}">${isActive ? '🔴 LIVE NOW' : '⏳ UP NEXT'} · Sprint ${sprint.id}</span>
+                    <span class="sprint-badge ${isRest?'rest-badge':''}">${isActive?'🔴 LIVE NOW':'⏳ UP NEXT'} · Sprint ${sprint.id}</span>
                     <h3 class="sprint-title">${sprint.title}</h3>
-                    <p class="sprint-meta">
-                        ${sprint.start.slice(5)} → ${sprint.end.slice(5)} · Phase ${sprint.phase}
-                        ${sprint.reward ? ` · Reward: ${sprint.reward}` : ''}
-                    </p>
+                    <p class="sprint-meta">${sprint.start.slice(5)} → ${sprint.end.slice(5)} · Phase ${sprint.phase}${sprint.reward?` · Reward: ${sprint.reward}`:''}</p>
                     <div class="deliverables">
                         ${sprint.deliverables.map((d, i) => `
-                            <div class="deliverable ${isDeliverableChecked(sprint.id, i) ? 'checked' : ''}"
-                                 onclick="toggleDeliverable(${sprint.id}, ${i})">
-                                <div class="checkbox">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
+                            <div class="deliverable ${isDeliverableChecked(sprint.id, i)?'checked':''}" onclick="toggleDeliverable(${sprint.id}, ${i})">
+                                <div class="checkbox">${checkSvg}</div>
                                 <span class="deliverable-text">${d}</span>
-                            </div>
-                        `).join('')}
+                            </div>`).join('')}
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         function renderSubjects(containerId, detailed = false) {
             const container = document.getElementById(containerId);
             container.innerHTML = SUBJECTS.map(subject => {
                 const progress = getSubjectProgress(subject);
-                const sprintNames = SPRINTS.filter(s => subject.sprints.includes(s.id));
                 const statusText = progress.percent === 100 ? 'Complete' : progress.percent > 0 ? 'In Progress' : 'Not Started';
                 const statusColor = progress.percent === 100 ? 'var(--green)' : progress.percent > 0 ? 'var(--accent-2)' : 'var(--text-muted)';
-
-                return `
-                    <div class="subject-card">
-                        <div class="subject-top">
-                            <span class="subject-name">${subject.name}</span>
-                            <span class="subject-marks">${subject.marks} marks</span>
-                        </div>
-                        <div class="subject-bar-track">
-                            <div class="subject-bar-fill" style="width: ${progress.percent}%; background: ${subject.color}"></div>
-                        </div>
-                        <div class="subject-stats">
-                            <span>${progress.done}/${progress.total} tasks</span>
-                            <span class="subject-status">
-                                <span class="status-dot" style="background: ${statusColor}"></span>
-                                ${statusText}
-                            </span>
-                        </div>
-                        ${detailed ? `<div style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted)">
-                            Sprints: ${sprintNames.map(s => `S${s.id}`).join(', ')}
-                        </div>` : ''}
-                    </div>
-                `;
+                const sprintNames = SPRINTS.filter(s => subject.sprints.includes(s.id));
+                return `<div class="subject-card">
+                    <div class="subject-top"><span class="subject-name">${subject.name}</span><span class="subject-marks">${subject.marks} marks</span></div>
+                    <div class="subject-bar-track"><div class="subject-bar-fill" style="width:${progress.percent}%;background:${subject.color}"></div></div>
+                    <div class="subject-stats"><span>${progress.done}/${progress.total} tasks</span><span class="subject-status"><span class="status-dot" style="background:${statusColor}"></span>${statusText}</span></div>
+                    ${detailed ? `<div style="margin-top:10px;font-size:0.75rem;color:var(--text-muted)">Sprints: ${sprintNames.map(s=>`S${s.id}`).join(', ')}</div>` : ''}
+                </div>`;
             }).join('');
-
-            // Trigger animation
-            setTimeout(() => {
-                container.querySelectorAll('.subject-bar-fill').forEach(bar => {
-                    bar.style.width = bar.style.width; // Force reflow
-                });
-            }, 100);
         }
 
         function renderAllSprints() {
             const container = document.getElementById('all-sprints');
             const now = today();
-            const completedCount = getCompletedSprints();
-
-            document.getElementById('sprint-count').textContent = `${completedCount}/32 done`;
-
+            document.getElementById('sprint-count').textContent = `${getCompletedSprints()}/32 done`;
             const grouped = {};
-            SPRINTS.forEach(sprint => {
-                if (!grouped[sprint.phase]) grouped[sprint.phase] = [];
-                grouped[sprint.phase].push(sprint);
-            });
-
-            // Add Phase 2 placeholder
-            const allPhases = { ...grouped };
-            if (!allPhases[2]) allPhases[2] = [];
-
+            SPRINTS.forEach(s => { if (!grouped[s.phase]) grouped[s.phase] = []; grouped[s.phase].push(s); });
             container.innerHTML = PHASES.map(phase => {
-                const sprints = allPhases[phase.id] || [];
-                return `
-                    <div class="sprint-phase-group">
-                        <div class="sprint-phase-title">
-                            <span class="phase-dot" style="background: ${phase.color}"></span>
-                            Phase ${phase.id}: ${phase.name}
-                            <span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted)">(${phase.dates})</span>
-                        </div>
-                        ${sprints.length === 0 ? `<p style="font-size: 0.85rem; color: var(--text-muted); padding: 12px">No sprints — focus on end-sem exams! 📝</p>` : `
-                        <div class="sprints-row">
-                            ${sprints.map(sprint => {
-                                const progress = getSprintProgress(sprint);
-                                const isActive = now >= parseDate(sprint.start) && now <= parseDate(sprint.end);
-                                const completed = isSprintCompleted(sprint);
-                                return `
-                                    <div class="sprint-card ${isActive ? 'active' : ''} ${completed ? 'completed' : ''}"
-                                         onclick="openSprintModal(${sprint.id})">
-                                        <div class="sprint-card-header">
-                                            <span class="sprint-card-num">Sprint ${sprint.id}</span>
-                                            <span class="sprint-card-status">${completed ? '✅' : isActive ? '🔥' : progress.done > 0 ? '🟡' : '⬜'}</span>
-                                        </div>
-                                        <div class="sprint-card-title">${sprint.title}</div>
-                                        <div class="sprint-card-dates">${sprint.start.slice(5)} → ${sprint.end.slice(5)} · ${sprint.reward}</div>
-                                        <div class="sprint-card-progress">
-                                            <div class="sprint-card-progress-bar" style="width: ${progress.percent}%; background: ${completed ? 'var(--green)' : 'var(--accent-1)'}"></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>`}
-                    </div>
-                `;
+                const sprints = grouped[phase.id] || [];
+                return `<div class="sprint-phase-group">
+                    <div class="sprint-phase-title"><span class="phase-dot" style="background:${phase.color}"></span>Phase ${phase.id}: ${phase.name}<span style="font-weight:400;font-size:0.8rem;color:var(--text-muted)">(${phase.dates})</span></div>
+                    ${sprints.length === 0 ? `<p style="font-size:0.85rem;color:var(--text-muted);padding:12px">No sprints — focus on end-sem exams! 📝</p>` : `
+                    <div class="sprints-row">${sprints.map(sprint => {
+                        const progress = getSprintProgress(sprint);
+                        const isActive = now >= parseDate(sprint.start) && now <= parseDate(sprint.end);
+                        const completed = isSprintCompleted(sprint);
+                        return `<div class="sprint-card ${isActive?'active':''} ${completed?'completed':''}" onclick="openSprintModal(${sprint.id})">
+                            <div class="sprint-card-header"><span class="sprint-card-num">Sprint ${sprint.id}</span><span class="sprint-card-status">${completed?'✅':isActive?'🔥':progress.done>0?'🟡':'⬜'}</span></div>
+                            <div class="sprint-card-title">${sprint.title}</div>
+                            <div class="sprint-card-dates">${sprint.start.slice(5)} → ${sprint.end.slice(5)} · ${sprint.reward}</div>
+                            <div class="sprint-card-progress"><div class="sprint-card-progress-bar" style="width:${progress.percent}%;background:${completed?'var(--green)':'var(--accent-1)'}"></div></div>
+                        </div>`;
+                    }).join('')}</div>`}
+                </div>`;
             }).join('');
         }
 
@@ -1499,23 +1151,12 @@
             document.getElementById('mock-grid').innerHTML = MOCK_TESTS.map(mock => {
                 const score = getMockScore(mock.id);
                 const scoreColor = score !== null ? (score >= 55 ? 'var(--green)' : score >= 40 ? 'var(--accent-2)' : 'var(--red)') : 'var(--text-muted)';
-
-                return `
-                    <div class="mock-card">
-                        <div class="mock-num">${mock.label}</div>
-                        ${score !== null ? `
-                            <div class="mock-score" style="color: ${scoreColor}">${score}/100</div>
-                            <div class="mock-date">${mock.targetDate}</div>
-                        ` : `
-                            <div class="mock-score pending">Not taken yet</div>
-                            <div class="mock-date">${mock.targetDate}</div>
-                            <div class="mock-input-group">
-                                <input type="number" min="0" max="100" step="0.5" placeholder="Score" id="mock-input-${mock.id}">
-                                <button onclick="saveMockScore(${mock.id}, document.getElementById('mock-input-${mock.id}').value)">Save</button>
-                            </div>
-                        `}
-                    </div>
-                `;
+                return `<div class="mock-card"><div class="mock-num">${mock.label}</div>
+                    ${score !== null ? `<div class="mock-score" style="color:${scoreColor}">${score}/100</div><div class="mock-date">${mock.targetDate}</div>` :
+                    `<div class="mock-score pending">Not taken yet</div><div class="mock-date">${mock.targetDate}</div>
+                    <div class="mock-input-group"><input type="number" min="0" max="100" step="0.5" placeholder="Score" id="mock-input-${mock.id}">
+                    <button onclick="saveMockScore(${mock.id}, document.getElementById('mock-input-${mock.id}').value)">Save</button></div>`}
+                </div>`;
             }).join('');
         }
 
@@ -1525,35 +1166,18 @@
             const sprint = SPRINTS.find(s => s.id === sprintId);
             const progress = getSprintProgress(sprint);
             const subject = SUBJECTS.find(s => s.id === sprint.subject);
-
+            const checkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             document.getElementById('modal-content').innerHTML = `
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <button class="modal-close" onclick="closeModal()">×</button>
                 <h3>Sprint ${sprint.id}: ${sprint.title}</h3>
-                <p class="modal-meta">
-                    ${sprint.start.slice(5)} → ${sprint.end.slice(5)} · Phase ${sprint.phase}
-                    ${subject ? ` · ${subject.name}` : ' · Mixed'}
-                    · Reward: ${sprint.reward}
-                </p>
-                <div style="margin-bottom: 16px">
-                    <div class="subject-bar-track">
-                        <div class="subject-bar-fill" style="width: ${progress.percent}%; background: var(--accent-1)"></div>
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px">${progress.done}/${progress.total} completed</div>
-                </div>
-                <div class="deliverables">
-                    ${sprint.deliverables.map((d, i) => `
-                        <div class="deliverable ${isDeliverableChecked(sprint.id, i) ? 'checked' : ''}"
-                             onclick="toggleDeliverable(${sprint.id}, ${i})">
-                            <div class="checkbox">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </div>
-                            <span class="deliverable-text">${d}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+                <p class="modal-meta">${sprint.start.slice(5)} → ${sprint.end.slice(5)} · Phase ${sprint.phase}${subject?` · ${subject.name}`:' · Mixed'} · Reward: ${sprint.reward}</p>
+                <div style="margin-bottom:16px"><div class="subject-bar-track"><div class="subject-bar-fill" style="width:${progress.percent}%;background:var(--accent-1)"></div></div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px">${progress.done}/${progress.total} completed</div></div>
+                <div class="deliverables">${sprint.deliverables.map((d, i) => `
+                    <div class="deliverable ${isDeliverableChecked(sprint.id, i)?'checked':''}" onclick="toggleDeliverable(${sprint.id}, ${i})">
+                        <div class="checkbox">${checkSvg}</div><span class="deliverable-text">${d}</span>
+                    </div>`).join('')}
+                </div>`;
             document.getElementById('modal-overlay').classList.add('open');
         }
 
@@ -1563,7 +1187,6 @@
             document.getElementById('modal-overlay').classList.remove('open');
         }
 
-        // ===== TAB SWITCHING =====
         function switchTab(tabId) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -1581,33 +1204,30 @@
 
         function launchConfetti() {
             const container = document.getElementById('confetti-container');
-            const colors = ['#ff6b35', '#f7c948', '#4ecdc4', '#6c5ce7', '#fd79a8', '#ff6b6b'];
-            const emojis = ['🥟', '🍗', '🍛', '🎯', '✅', '🔥'];
-
+            const colors = ['#ff6b35','#f7c948','#4ecdc4','#6c5ce7','#fd79a8','#ff6b6b'];
+            const emojis = ['🥟','🍗','🍛','🎯','✅','🔥'];
             for (let i = 0; i < 30; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
-                piece.textContent = Math.random() > 0.5 ? emojis[Math.floor(Math.random() * emojis.length)] : '●';
-                piece.style.left = Math.random() * 100 + '%';
-                piece.style.fontSize = (Math.random() * 16 + 10) + 'px';
-                piece.style.color = colors[Math.floor(Math.random() * colors.length)];
-                piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                piece.style.animationDelay = Math.random() * 0.5 + 's';
+                piece.textContent = Math.random() > 0.5 ? emojis[Math.floor(Math.random()*emojis.length)] : '●';
+                piece.style.left = Math.random()*100+'%';
+                piece.style.fontSize = (Math.random()*16+10)+'px';
+                piece.style.color = colors[Math.floor(Math.random()*colors.length)];
+                piece.style.animationDuration = (Math.random()*2+2)+'s';
+                piece.style.animationDelay = Math.random()*0.5+'s';
                 container.appendChild(piece);
             }
-
             setTimeout(() => container.innerHTML = '', 4000);
         }
 
-        // ===== RESET =====
         function resetAllData() {
             if (confirm('Are you sure? This will reset ALL your progress. Sab momos chale jayenge! 🥟')) {
-                localStorage.removeItem('gate2027_state');
+                localState = { deliverables: {}, mocks: {} };
+                saveStateToCloud();
                 renderAll();
             }
         }
 
-        // ===== RENDER ALL =====
         function renderAll() {
             renderStats();
             renderPhaseTimeline();
@@ -1618,17 +1238,17 @@
             renderMockTests();
         }
 
-        // ===== INIT =====
-        renderCountdown();
-        renderAll();
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-        // Update countdown every second
-        setInterval(renderCountdown, 1000);
-
-        // Keyboard shortcut: Escape to close modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
-        });
+        // ===== EXPOSE TO WINDOW (for onclick handlers) =====
+        window.handleLogin = handleLogin;
+        window.handleLogout = handleLogout;
+        window.toggleDeliverable = toggleDeliverable;
+        window.saveMockScore = saveMockScore;
+        window.openSprintModal = openSprintModal;
+        window.closeModal = closeModal;
+        window.switchTab = switchTab;
+        window.resetAllData = resetAllData;
     </script>
 </body>
 </html>
