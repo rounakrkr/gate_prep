@@ -693,6 +693,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ hd: 'kiit.ac.in' });
 
         // ===== DATA =====
         const GATE_DATE = new Date('2027-02-06T09:00:00+05:30');
