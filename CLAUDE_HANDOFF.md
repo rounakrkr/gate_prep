@@ -77,63 +77,22 @@ Both scores verified directly from official answer key PDFs using Python:
 
 ---
 
-## 📁 Repo State (as of 5 Oct 2026)
+## 📁 Repo State (updated 5 Oct 2026)
 
-### Committed & pushed to `main` ✅
-- `index.html` — the app (all features working)
-- `mocks/` — folder exists (holds PDF files)
-- `README.md`
-- `formula-sheets/`, `mock-tests/`, `notes/` — folders
+- ✅ App, PYQ analysis files, `pyqs/` papers, `notes/` — all committed on `main`
+- ✅ **Admin mode DONE** (client-side email gate + `emailVerified`, 👑 badge, Admin tab, PYQ stats via Firestore `admin/pyq_stats`, backup export)
+- ✅ `firestore.rules` added to repo (admin/* → admin only, users/{uid} → owner only, rest denied). **Must be published in Firebase Console** (repo file alone does nothing)
+- ✅ Fixes: sprint count uses `SPRINTS.length` (31 sprints, S13 skipped), countdown timer leak, HTML-escaped profile header, sync-error toast, safe localStorage migration
+- ⏳ Admin PYQ panel: paste verified GATE 2023/2024 scores via the panel (stored in Firestore, not in repo)
+- ⏳ `mocks/mock-1..3.pdf` are not in the repo → Mock download buttons 404 until added
+- ⏳ Sprint dates overlap on boundary days (S10/S11 on Oct 25, S11/S12 on Oct 28, S25/S26 on Jan 3) — confirm intended
+- ⚠️ Repo is **public** — this file contains personal emails; consider removing them or making repo private
 
-### ⚠️ NOT committed (untracked — Rounak made these today locally):
-- `GATE_PYQ_Analysis.md` — 821 lines, 8-paper PYQ pattern analysis (2022→2026), subject heatmaps, tier list, question template library
-- `GATE_CS_PYQ_Analysis_S16.md` — 600 lines, more detailed version with 16 Tier S topics, exact PYQ index per topic, progress tracker
+## 🎯 NEXT TASK
 
-> Rounak said he'll commit these himself or ask Claude to — **don't auto-commit unless asked**.
+Pick from the ⏳ list above, or new admin features (e.g. analytics charts for PYQ trend, editable sprint text).
 
-### Git remote
-- `origin` = `https://github.com/rounakrkr/gate_prep`
-
----
-
-## 🎯 NEXT TASK — What Claude needs to build
-
-### Feature: Admin-only mode for Rounak in GATEway app
-
-**What Rounak wants:**
-- The app is currently open to ALL `@kiit.ac.in` users
-- He wants a **special "admin/premium" mode** that is **only for him** (`24051123@kiit.ac.in`)
-- Other KIIT users should see the normal app
-- Rounak (admin) should see **extra features** — exact features TBD but the concept is:
-  - Maybe a special "Admin" badge/indicator when he's logged in
-  - Maybe access to hidden stats, dev tools, or future premium features
-  - The point is: his account = elevated access, others = standard access
-
-**How to implement (suggested approach):**
-
-**Option A — Client-side (simple, fine for this personal app):**
-```javascript
-const ADMIN_EMAIL = '24051123@kiit.ac.in';
-const isAdmin = user.email === ADMIN_EMAIL;
-// Then conditionally render admin-only UI
-```
-Pros: Zero backend change needed. Cons: Security via obscurity (fine for a personal study app).
-
-**Option B — Firestore role field (more robust):**
-```
-users/{uid}/role: "admin"  // set manually in Firebase console for Rounak's UID
-```
-Then check `userData.role === 'admin'` after loading Firestore doc.
-Pros: Cleaner, extensible. Cons: Need to manually set field in Firebase console once.
-
-> Rounak will decide which approach. Ask him if unsure.
-
-**What admin mode might show (brainstorm — confirm with Rounak):**
-- 🔴 Admin badge next to name in header
-- 📊 Extra analytics tab showing his GATE PYQ performance stats
-- 🛠️ Dev tools / debug info
-- 📝 Ability to edit sprint descriptions live
-- 🔒 A hidden "admin panel" route/section
+> Don't auto-commit analysis `.md` files edits without asking. Never store personal scores/data in the repo.
 
 ---
 
@@ -198,13 +157,3 @@ Pros: Cleaner, extensible. Cons: Need to manually set field in Firebase console 
 - **Artifacts dir:** `C:\Users\RounakKR\.gemini\antigravity\brain\5ac20a0f-5144-48ba-b237-2ec495e33885\`
 
 ---
-
-## 🎯 Summary: What to do next
-
-1. **Ask Rounak** which admin approach he prefers (Option A vs B above)
-2. **Implement** admin detection in `index.html`
-3. **Show admin UI** — at minimum an admin badge; confirm with Rounak what else he wants
-4. **Test** — make sure normal @kiit.ac.in users see nothing different
-5. **Commit + push** — Vercel will auto-deploy
-
-> 💡 Rounak's KIIT email `24051123@kiit.ac.in` is the ONE and ONLY admin. Hardcode it or use Firestore role — either works for this personal app.
