@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// GATEway 2027 — Firestore security rules
+// Paste into: Firebase Console → Firestore Database → Rules → Publish
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Signed in + Google-verified email
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    // Only @kiit.ac.in accounts
+    function isKiit() {
+      return signedIn() && request.auth.token.email.matches('.*@kiit[.]ac[.]in');
+    }
+
+    // The one and only admin
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == '24051123@kiit.ac.in';
+    }
+
+    // Admin-only collection (PYQ stats etc.)
+    match /admin/{doc} {
+      allow read, write: if isAdmin();
+    }
+
+    // Each KIIT user can read/write ONLY their own progress doc
+    match /users/{uid} {
+      allow read, write: if isKiit() && request.auth.uid == uid;
+    }
+
+    // Everything else: denied by default
+  }
+}

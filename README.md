@@ -35,3 +35,12 @@ GATE/
 - Dec 20 - Jan 3: Break #2 BLITZ
 - Jan: Mocks + PYQs
 - Feb: GATE 🎯
+
+## 🔐 Security & Admin Mode
+
+- Login is restricted to `@kiit.ac.in` Google accounts.
+- **Admin mode** (badge + Admin tab) is shown only to the admin account. The UI check is client-side,
+  so **real protection comes from Firestore rules** in [`firestore.rules`](firestore.rules).
+- To deploy rules: Firebase Console → Firestore Database → Rules → paste file contents → Publish.
+- Rules summary: `admin/*` → admin only · `users/{uid}` → that user only · everything else → denied.
+- Admin PYQ stats live in Firestore (`admin/pyq_stats`), never in this repo.
