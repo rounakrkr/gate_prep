@@ -562,6 +562,23 @@
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeInUp 0.6s ease forwards; opacity: 0; }
 
+        /* ===== ADMIN MODE (only injected for admin account) ===== */
+        .logo .badge.admin-pill { background: linear-gradient(135deg, #ffd700, #ff6b35); }
+        .nav-tab.admin-tab { border-color: rgba(247,201,72,0.45); }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .admin-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+        .admin-card .label { color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.6px; }
+        .admin-card .value { font-size: 1.7rem; font-weight: 800; margin-top: 4px; }
+        .admin-card .sub { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; word-break: break-all; }
+        .admin-panel-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .admin-table th, .admin-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+        .admin-table th { color: var(--text-secondary); font-weight: 600; }
+        .admin-textarea { width: 100%; min-height: 140px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-family: monospace; font-size: 0.85rem; }
+        .admin-btn { background: var(--accent-gradient); color: #000; border: none; border-radius: var(--radius-sm); padding: 8px 16px; font-weight: 700; cursor: pointer; margin: 10px 8px 0 0; }
+        .admin-btn.ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+        .admin-note { color: var(--text-muted); font-size: 0.8rem; margin-top: 8px; }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .container { padding: 0 16px; }
@@ -816,6 +833,7 @@
                     mocks: localState.mocks,
                     lastUpdated: new Date().toISOString()
                 }, { merge: true });
+                lastSyncAt = new Date();
             } catch (e) {
                 console.error("Save error:", e);
             }
@@ -889,6 +907,160 @@
             renderAll();
         }
 
+        // ===== ADMIN MODE =====
+        // NOTE: this check only decides what UI is shown. Real data protection for admin data
+        // comes from Firestore security rules (see README). No personal data is stored in this file.
+        const ADMIN_EMAIL = '24051123@kiit.ac.in';
+        let isAdmin = false;
+        let lastSyncAt = null;
+        let adminPyq = undefined;      // undefined = loading, null = none saved
+        let adminPyqError = null;
+        let adminEditing = false;
+
+        function esc(v) {
+            return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function checkAdmin(user) {
+            return !!user && user.emailVerified === true && (user.email || '').toLowerCase() === ADMIN_EMAIL;
+        }
+
+        function teardownAdminMode() {
+            if (document.getElementById('tab-admin') && document.getElementById('tab-admin').classList.contains('active')) {
+                switchTab('dashboard');
+            }
+            document.querySelectorAll('[data-admin-only]').forEach(el => el.remove());
+            isAdmin = false;
+            adminPyq = undefined;
+            adminPyqError = null;
+            adminEditing = false;
+        }
+
+        function setupAdminMode() {
+            teardownAdminMode();
+            if (!checkAdmin(currentUser)) return;
+            isAdmin = true;
+
+            const pill = document.createElement('span');
+            pill.className = 'badge admin-pill';
+            pill.setAttribute('data-admin-only', '');
+            pill.textContent = '👑 ADMIN';
+            document.querySelector('.logo').appendChild(pill);
+
+            const tab = document.createElement('div');
+            tab.className = 'nav-tab admin-tab';
+            tab.setAttribute('data-tab', 'admin');
+            tab.setAttribute('data-admin-only', '');
+            tab.textContent = '👑 Admin';
+            tab.onclick = () => switchTab('admin');
+            document.querySelector('.nav-tabs').appendChild(tab);
+
+            const sec = document.createElement('div');
+            sec.className = 'tab-content';
+            sec.id = 'tab-admin';
+            sec.setAttribute('data-admin-only', '');
+            document.querySelector('footer').before(sec);
+
+            renderAdminPanel();
+            loadAdminPyq();
+        }
+
+        async function loadAdminPyq() {
+            if (!isAdmin) return;
+            try {
+                const snap = await getDoc(doc(db, 'admin', 'pyq_stats'));
+                adminPyq = snap.exists() ? snap.data() : null;
+                adminPyqError = null;
+            } catch (e) {
+                adminPyq = null;
+                adminPyqError = e.message;
+            }
+            if (isAdmin) renderAdminPanel();
+        }
+
+        async function saveAdminPyq() {
+            if (!isAdmin) return;
+            let data;
+            try { data = JSON.parse(document.getElementById('admin-pyq-input').value); }
+            catch (e) { alert('Invalid JSON bhai 😅'); return; }
+            if (!data || !Array.isArray(data.papers)) { alert('JSON mein "papers" array chahiye'); return; }
+            try {
+                await setDoc(doc(db, 'admin', 'pyq_stats'), data);
+                adminPyq = data;
+                adminEditing = false;
+                renderAdminPanel();
+            } catch (e) {
+                alert('Save failed: ' + e.message);
+            }
+        }
+
+        function editAdminPyq() { if (!isAdmin) return; adminEditing = true; renderAdminPanel(); }
+        function cancelAdminPyq() { if (!isAdmin) return; adminEditing = false; renderAdminPanel(); }
+
+        function exportBackup() {
+            if (!isAdmin) return;
+            const blob = new Blob([JSON.stringify({
+                email: currentUser.email,
+                exportedAt: new Date().toISOString(),
+                deliverables: localState.deliverables,
+                mocks: localState.mocks
+            }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'gateway-backup.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function renderAdminPanel() {
+            const el = document.getElementById('tab-admin');
+            if (!isAdmin || !el) return;
+
+            const totalD = SPRINTS.reduce((a, s) => a + s.deliverables.length, 0);
+            const doneD = SPRINTS.reduce((a, s) => a + getSprintProgress(s).done, 0);
+            const sprintsDone = SPRINTS.filter(s => isSprintCompleted(s)).length;
+            const mocksScored = Object.keys(localState.mocks).length;
+            const sync = lastSyncAt ? lastSyncAt.toLocaleTimeString() : 'No save yet this session';
+
+            let pyqHtml;
+            if (adminPyq === undefined) {
+                pyqHtml = '<p class="admin-note">Loading…</p>';
+            } else if (adminPyq === null || adminEditing) {
+                const prefill = adminPyq ? JSON.stringify(adminPyq, null, 2) : '';
+                pyqHtml = `
+                    ${adminPyqError ? `<p class="admin-note">⚠️ ${esc(adminPyqError)}</p>` : ''}
+                    <p class="admin-note">Paste JSON: {"papers":[{"name":"GATE 20XX","score":0,"max":100,"correct":0,"wrong":0,"skipped":0}],"notes":""}</p>
+                    <textarea class="admin-textarea" id="admin-pyq-input">${esc(prefill)}</textarea>
+                    <button class="admin-btn" onclick="saveAdminPyq()">💾 Save to Firestore</button>
+                    ${adminPyq ? '<button class="admin-btn ghost" onclick="cancelAdminPyq()">Cancel</button>' : ''}`;
+            } else {
+                const rows = adminPyq.papers.map(p => `
+                    <tr><td>${esc(p.name)}</td><td>${esc(p.score)} / ${esc(p.max)}</td>
+                    <td>${esc(p.correct)}</td><td>${esc(p.wrong)}</td><td>${esc(p.skipped)}</td></tr>`).join('');
+                pyqHtml = `
+                    <table class="admin-table">
+                        <tr><th>Paper</th><th>Score</th><th>Correct</th><th>Wrong</th><th>Skipped</th></tr>${rows}
+                    </table>
+                    ${adminPyq.notes ? `<p class="admin-note">${esc(adminPyq.notes)}</p>` : ''}
+                    <button class="admin-btn ghost" onclick="editAdminPyq()">✏️ Edit</button>`;
+            }
+
+            el.innerHTML = `
+                <div class="section-header"><h2>👑 Admin Panel</h2><div class="line"></div></div>
+                <div class="admin-grid">
+                    <div class="admin-card"><div class="label">Deliverables</div><div class="value">${doneD}/${totalD}</div></div>
+                    <div class="admin-card"><div class="label">Sprints done</div><div class="value">${sprintsDone}/${SPRINTS.length}</div></div>
+                    <div class="admin-card"><div class="label">Mocks scored</div><div class="value">${mocksScored}</div></div>
+                    <div class="admin-card"><div class="label">Last cloud sync</div><div class="value" style="font-size:1.1rem">${esc(sync)}</div><div class="sub">uid: ${esc(currentUser.uid)}</div></div>
+                </div>
+                <div class="section-header"><h2>📊 PYQ Performance</h2><div class="line"></div></div>
+                <div class="admin-panel-box">${pyqHtml}</div>
+                <div class="section-header"><h2>🛠️ Tools</h2><div class="line"></div></div>
+                <div class="admin-panel-box">
+                    <button class="admin-btn" style="margin-top:0" onclick="exportBackup()">⬇️ Export progress backup (JSON)</button>
+                </div>`;
+        }
+
         // ===== AUTH =====
         async function handleLogin() {
             const btn = document.getElementById('google-btn');
@@ -953,10 +1125,12 @@
 
                 renderCountdown();
                 renderAll();
+                setupAdminMode();
                 setInterval(renderCountdown, 1000);
             } else {
                 // Signed out or non-KIIT
                 currentUser = null;
+                teardownAdminMode();
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('app').style.display = 'none';
@@ -1196,6 +1370,7 @@
         }
 
         function switchTab(tabId) {
+            if (tabId === 'admin' && !isAdmin) return;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelector(`.nav-tab[data-tab="${tabId}"]`).classList.add('active');
@@ -1244,6 +1419,7 @@
             renderSubjects('subjects-grid-detail', true);
             renderAllSprints();
             renderMockTests();
+            renderAdminPanel();
         }
 
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
@@ -1257,6 +1433,10 @@
         window.closeModal = closeModal;
         window.switchTab = switchTab;
         window.resetAllData = resetAllData;
+        window.saveAdminPyq = saveAdminPyq;
+        window.editAdminPyq = editAdminPyq;
+        window.cancelAdminPyq = cancelAdminPyq;
+        window.exportBackup = exportBackup;
     </script>
 </body>
 </html>
