@@ -67,6 +67,8 @@ click(root.querySelector('[data-act=tier][data-k=B]')); ok(root.querySelectorAll
 nav('tpl'); ok(root.querySelectorAll('#ah-tpl-list .ah-card').length === TEMPLATES.length, '44 templates listed');
 const q = root.querySelector('[data-act=tplq]'); q.value = 'cache'; q.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 ok(root.querySelectorAll('#ah-tpl-list .ah-card').length < TEMPLATES.length, 'template search filters');
+click(root.querySelector('[data-act=tplgot]')); ok(root.querySelector('.ah-tpl.got'), 'template card toggles to got-it');
+ok(root.querySelectorAll('.ah-seen').length > 1, 'seen-in chips render');
 nav('err'); root.querySelector('#ah-e-paper').value = "<img src=x onerror=alert(1)>"; root.querySelector('#ah-e-logic').value = 'use A²=cI';
 root.querySelector('#ah-e-topic').value = TOPICS.find(t => t.tier === 'S').id;
 click(root.querySelector('[data-act=erradd]'));

@@ -57,6 +57,17 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-focus .ah-in{margin-top:6px;padding:14px 16px}.ah-focus>p{margin-top:18px!important}.ah-cur{background:rgba(247,201,72,.1)}
 @media(max-width:560px){.ah-card{padding:16px}.ah-focus{padding:18px}.ah-step{padding:14px}.ah-qrow{flex-direction:column;gap:6px}.ah-qp{padding-top:0}}
 @media(max-width:860px){.ah-shell{display:block}.ah-side{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:50;flex-direction:row;overflow-x:auto;border-radius:0;padding:8px;background:var(--bg-secondary)}.ah-side .ah-btn{white-space:nowrap}.ah-brand,.ah-spacer,.ah-save{display:none}.ah-main{padding-bottom:84px}}
+.ah-tpl{padding:24px 26px;transition:border-color .2s,background .2s}.ah-tpl.got{border-color:rgba(78,205,196,.55);background:rgba(78,205,196,.06)}
+.ah-tpl-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}.ah-tpl h4{margin:12px 0 0;font-size:1.05rem;line-height:1.45}
+.ah-kind{display:inline-block;font-size:.72rem;font-weight:600;padding:4px 11px;border-radius:999px;border:1px solid}
+.ah-kind.A{color:#f7c948;border-color:rgba(247,201,72,.5);background:rgba(247,201,72,.08)}.ah-kind.B{color:#a29bfe;border-color:rgba(162,155,254,.5);background:rgba(162,155,254,.08)}
+.ah-tid{margin-left:10px;font-size:.72rem;color:var(--text-muted)}
+.ah-got{margin-left:auto;padding:9px 16px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font:inherit;font-size:.82rem;cursor:pointer;white-space:nowrap}
+.ah-got.on{background:rgba(78,205,196,.18);border-color:#4ecdc4;color:#4ecdc4;font-weight:600}
+.ah-seen-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+.ah-seen{font-size:.76rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text-secondary)}
+.ah-logic{margin-top:14px;padding:14px 18px;border-left:3px solid #f7c948;background:rgba(247,201,72,.06);border-radius:0 12px 12px 0;line-height:1.65;font-size:.92rem}
+.ah-logic small{display:block;margin-bottom:4px;color:var(--text-secondary);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
 
@@ -219,9 +230,14 @@ ${chipsHtml(t)}
 <input class="ah-in" data-act="tplq" placeholder="search…" value="${e(ui.tplQ)}"><span class="ah-muted">${got}/${TEMPLATES.length} mastered</span></div>
 <div id="ah-tpl-list">${tplList(list)}</div>`;
     }
-    const tplList = list => list.map(x => `<div class="ah-card"><div class="ah-row" style="align-items:center"><span class="ah-tag">${x.id}</span><b style="flex:1">${e(x.title)}</b>
-<label class="ah-muted"><input type="checkbox" data-act="tpl" data-k="${x.id}" ${S.tpl[x.id] ? 'checked' : ''}> got it</label></div>
-<div class="ah-muted">📍 ${e(x.seen)}</div><div style="margin-top:6px">${e(x.logic)}</div></div>`).join('') || '<p class="ah-muted">No match.</p>';
+    const tplList = list => list.map(x => {
+        const got = !!S.tpl[x.id], seen = x.seen.split(/;\s*|,\s*(?=')/).map(v => v.trim()).filter(Boolean);
+        return `<div class="ah-card ah-tpl ${got ? 'got' : ''}">
+<div class="ah-tpl-head"><div><span class="ah-kind ${x.kind}">${x.kind === 'A' ? '🎯 Near-exact repeat' : '🧩 Recurring'}</span><span class="ah-tid">${x.id}</span><h4>${e(x.title)}</h4></div>
+<button class="ah-got ${got ? 'on' : ''}" data-act="tplgot" data-k="${x.id}">${got ? '✅ Got it' : '⬜ Mark as got it'}</button></div>
+<div class="ah-seen-wrap">${seen.map(v => `<span class="ah-seen">${e(v)}</span>`).join('')}</div>
+<div class="ah-logic"><small>${x.kind === 'A' ? "💡 What's the same" : '🧠 Core logic to practise'}</small><div>${e(x.logic)}</div></div></div>`;
+    }).join('') || '<p class="ah-muted">No match.</p>';
 
     function vErr() {
         const topicOpts = '<option value="">— topic —</option>' + TOPICS.map(t => `<option value="${t.id}">${t.tier} · ${e(t.name)}</option>`).join('');
@@ -303,6 +319,7 @@ ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" dat
         else if (a === 'auto') { ui.focus = null; render(); }
         else if (a === 'open') { ev.preventDefault(); ui.topic = b.dataset.t; ui.view = 'pyq'; render(); }
         else if (a === 'tier') { ui.tiers[b.dataset.k] = !ui.tiers[b.dataset.k]; render(); }
+        else if (a === 'tplgot') { const k = b.dataset.k; if (S.tpl[k]) delete S.tpl[k]; else S.tpl[k] = true; save(); render(); }
         else if (a === 'tplf') { ui.tplF = b.dataset.k; render(); }
         else if (a === 'rand') {
             const t = byId[b.dataset.t], pool = t.qs.filter(q => S.q[q.k]);
