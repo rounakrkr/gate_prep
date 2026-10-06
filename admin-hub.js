@@ -68,6 +68,14 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-seen{font-size:.76rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text-secondary)}
 .ah-logic{margin-top:14px;padding:14px 18px;border-left:3px solid #f7c948;background:rgba(247,201,72,.06);border-radius:0 12px 12px 0;line-height:1.65;font-size:.92rem}
 .ah-logic small{display:block;margin-bottom:4px;color:var(--text-secondary);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+.ah-main a{color:inherit;text-decoration:none}
+.ah-trk td,.ah-trk th{padding:16px 14px}.ah-trk .ah-topic{min-width:300px;max-width:380px}
+.ah-trk .ah-topic a{display:inline-block;font-weight:600;font-size:.95rem;line-height:1.45;color:var(--text-primary);border-bottom:1px dashed rgba(247,201,72,.35);transition:color .15s,border-color .15s}
+.ah-trk .ah-topic a:hover{color:#f7c948;border-bottom-color:#f7c948}
+.ah-sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;font-size:.78rem;color:var(--text-secondary)}
+.ah-trk td:not(:first-child):not(:last-child),.ah-trk th:not(:first-child):not(:last-child){text-align:center}
+.ah-trk .ah-prog{margin:6px auto 0;max-width:120px}.ah-trk td:last-child .ah-in{width:100%;min-width:170px;box-sizing:border-box}
+.ah-trk tbody tr:hover,.ah-trk tr:hover td{background:rgba(255,255,255,.02)}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
 
@@ -196,7 +204,7 @@ ${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t)
     function vTracker() {
         const rows = TOPICS.filter(t => ui.tiers[t.tier]).map(t => {
             const s = st(t), m = S.t[t.id] || {};
-            return `<tr><td><span class="ah-tag">${TIER_LABEL[t.tier]}</span> <a href="#" data-act="open" data-t="${t.id}"><b>${e(t.name)}</b></a><div class="ah-muted">${e(t.subject)} · ${t.papers}/8 papers</div></td>
+            return `<tr><td class="ah-topic"><a href="#" data-act="open" data-t="${t.id}">${e(t.name)}</a><div class="ah-sub"><span class="ah-tag">${TIER_LABEL[t.tier]}</span><span>${e(t.subject)} · ${t.papers}/8 papers</span></div></td>
 <td>${t.avg}</td><td>${heat(t.heat)}</td>
 <td><input type="checkbox" data-act="tt" data-f="concept" data-t="${t.id}" ${m.concept ? 'checked' : ''}></td>
 <td style="min-width:120px">${s.solved}/${t.qs.length}${bar(s.pct)}</td><td>${s.acc === null ? '–' : pct(s.acc)}</td>
@@ -205,7 +213,7 @@ ${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t)
         }).join('');
         return `<div class="ah-bar">${['S', 'A', 'B', 'C'].map(k => `<button class="ah-chip ${ui.tiers[k] ? 'on' : ''}" data-act="tier" data-k="${k}">${TIER_LABEL[k]}</button>`).join('')}
 <span class="ah-muted">Heat strip = marks in ${PAPERS.join(' ')}</span></div>
-<div class="ah-card ah-scroll"><table class="ah-tbl"><tr><th>Topic</th><th>Avg</th><th>Heat</th><th>Concept</th><th>PYQs</th><th>Acc</th><th>Rev 2×</th><th>Notes</th></tr>${rows}</table></div>`;
+<div class="ah-card ah-scroll"><table class="ah-tbl ah-trk"><tr><th>Topic</th><th>Avg</th><th>Heat</th><th>Concept</th><th>PYQs</th><th>Acc</th><th>Rev 2×</th><th>Notes</th></tr>${rows}</table></div>`;
     }
 
     function vPyq() {
