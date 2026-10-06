@@ -30,7 +30,7 @@ const CSS = `
 .ah-bar .sp{flex:1}.ah-save{font-size:.8rem;color:var(--text-secondary)}
 .ah-btn,.ah-chip{background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:7px 13px;border-radius:999px;cursor:pointer;font-size:.85rem}
 .ah-btn.on,.ah-chip.on{background:var(--accent-gradient,linear-gradient(135deg,#ffd700,#ff6b35));color:#111;border-color:transparent;font-weight:600}
-.ah-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.ah-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px}
 .ah-card h3{margin:0 0 10px;font-size:1rem}.ah-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
 .ah-stat .v{font-size:1.5rem;font-weight:700}.ah-stat .l{font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px}
 .ah-muted{color:var(--text-secondary);font-size:.85rem}.ah-warn{border-color:rgba(255,107,53,.6)}
@@ -40,15 +40,22 @@ const CSS = `
 .ah-prog{height:6px;border-radius:4px;background:var(--border);overflow:hidden;min-width:70px}.ah-prog i{display:block;height:100%;background:linear-gradient(90deg,#ff6b35,#ffd700)}
 .ah-heat{display:inline-flex;gap:2px}.ah-heat b{width:11px;height:11px;border-radius:2px;background:#2a2a35}
 .ah-heat .h1{background:#f7e26b}.ah-heat .h2{background:#f4a640}.ah-heat .h3{background:#e5484d}
-.ah-chips{display:flex;flex-wrap:wrap;gap:8px}.ah-q{border:1px solid var(--border);background:var(--bg-secondary,#1b1b24);color:var(--text-primary);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:.82rem}
+.ah-chips{display:flex;flex-wrap:wrap;gap:10px}.ah-q{border:1px solid var(--border);background:var(--bg-secondary,#1b1b24);color:var(--text-primary);border-radius:10px;padding:9px 14px;min-width:70px;cursor:pointer;font-size:.88rem}
 .ah-q.q1{background:rgba(46,204,113,.22);border-color:#2ecc71}.ah-q.q2{background:rgba(229,72,77,.22);border-color:#e5484d}.ah-q small{opacity:.6;margin-left:4px}
 .ah-in,.ah-sel,.ah-txt{background:var(--bg-secondary,#1b1b24);border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:8px 10px;font:inherit;font-size:.85rem}
 .ah-txt{width:100%;min-height:54px;box-sizing:border-box}.ah-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
 .ah-shell{display:grid;grid-template-columns:215px 1fr;gap:22px;align-items:start}
 .ah-side{position:sticky;top:12px;display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card)}
 .ah-side .ah-btn{border-radius:12px;text-align:left}.ah-brand{font-weight:700;margin-bottom:6px}.ah-spacer{height:10px}
-.ah-hero{display:flex;flex-wrap:wrap;gap:20px;align-items:center;padding:16px;margin-bottom:14px;border-radius:var(--radius);border:1px solid rgba(247,201,72,.35);background:linear-gradient(135deg,rgba(247,201,72,.1),rgba(255,107,53,.06))}
-.ah-big{font-size:2.2rem;font-weight:800;line-height:1}.ah-focus{border-color:rgba(247,201,72,.55)}.ah-step{display:block;margin:10px 0}.ah-cur{background:rgba(247,201,72,.1)}
+.ah-hero{display:flex;flex-wrap:wrap;gap:20px;align-items:center;padding:20px;margin-bottom:20px;border-radius:var(--radius);border:1px solid rgba(247,201,72,.35);background:linear-gradient(135deg,rgba(247,201,72,.1),rgba(255,107,53,.06))}
+.ah-big{font-size:2.2rem;font-weight:800;line-height:1}.ah-focus{border-color:rgba(247,201,72,.55)}.ah-focus{padding:30px}.ah-focus h2{margin:10px 0 8px;line-height:1.3}
+.ah-step{display:block;margin:18px 0;padding:18px 20px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.025)}
+label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
+.ah-step input[type=checkbox],.ah-tbl input[type=checkbox]{width:19px;height:19px;accent-color:#f7c948;cursor:pointer}
+.ah-step .ah-prog{margin:12px 0 16px}.ah-qrow{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.ah-qrow:last-child{margin-bottom:0}
+.ah-qp{min-width:62px;padding-top:9px;font-size:.78rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.ah-focus .ah-in{margin-top:6px;padding:14px 16px}.ah-focus>p{margin-top:18px!important}.ah-cur{background:rgba(247,201,72,.1)}
+@media(max-width:560px){.ah-card{padding:16px}.ah-focus{padding:18px}.ah-step{padding:14px}.ah-qrow{flex-direction:column;gap:6px}.ah-qp{padding-top:0}}
 @media(max-width:860px){.ah-shell{display:block}.ah-side{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:50;flex-direction:row;overflow-x:auto;border-radius:0;padding:8px;background:var(--bg-secondary)}.ah-side .ah-btn{white-space:nowrap}.ah-brand,.ah-spacer,.ah-save{display:none}.ah-main{padding-bottom:84px}}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
@@ -121,7 +128,13 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     // ---------- views ----------
     function vOverview() { return `<div id="ah-overview">${overviewHtml ? overviewHtml() : ''}</div>`; }
 
-    const chipsHtml = t => `<div class="ah-chips">${t.qs.map(q => { const v = S.q[q.k] || 0; return `<button class="ah-q q${v}" data-act="q" data-t="${t.id}" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} ${e(q.l)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div>`;
+    // PYQ chips grouped one row per paper ('22, '23, '24-S1 …) so they scan easily
+    const chipsHtml = t => {
+        const g = [];
+        t.qs.forEach(q => { const [p, n] = q.l.split(' Q'); const last = g[g.length - 1]; (last && last.p === p ? last : g[g.push({ p, qs: [] }) - 1]).qs.push({ q, n }); });
+        return g.map(({ p, qs }) => `<div class="ah-qrow"><span class="ah-qp">${e(p)}</span><div class="ah-chips">${qs.map(({ q, n }) => { const v = S.q[q.k] || 0;
+            return `<button class="ah-q q${v}" data-act="q" data-t="${t.id}" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} Q${e(n)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div></div>`).join('');
+    };
 
     function vToday() {
         const T = totals(), P = planInfo();
@@ -193,7 +206,7 @@ ${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t)
 <span class="ah-muted">tap a question: ⬜ unsolved → ✅ correct → ❌ wrong → ⬜</span></div>
 <div class="ah-card"><h3>${TIER_LABEL[t.tier]} · ${e(t.name)}</h3>
 <div class="ah-muted" style="margin-bottom:10px">${s.solved}/${t.qs.length} solved · ${s.acc === null ? 'no accuracy yet' : pct(s.acc) + ' accuracy'} · avg ${t.avg} marks/paper ${heat(t.heat)}</div>
-<div class="ah-chips">${t.qs.map(q => { const v = S.q[q.k] || 0; return `<button class="ah-q q${v}" data-act="q" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} ${e(q.l)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div>
+${chipsHtml(t)}
 <div style="margin-top:12px"><button class="ah-btn" data-act="clear" data-t="${t.id}">Reset this topic</button></div></div>`;
     }
 
