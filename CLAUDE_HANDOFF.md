@@ -77,22 +77,48 @@ Both scores verified directly from official answer key PDFs using Python:
 
 ---
 
-## 📁 Repo State (updated 5 Oct 2026)
+## 📁 Repo State (updated 6 Oct 2026) — READ THIS FIRST
 
-- ✅ App, PYQ analysis files, `pyqs/` papers, `notes/` — all committed on `main`
-- ✅ **Admin mode DONE** (client-side email gate + `emailVerified`, 👑 badge, Admin tab, PYQ stats via Firestore `admin/pyq_stats`, backup export)
-- ✅ `firestore.rules` added to repo (admin/* → admin only, users/{uid} → owner only, rest denied). **Must be published in Firebase Console** (repo file alone does nothing)
-- ✅ Fixes: sprint count uses `SPRINTS.length` (31 sprints, S13 skipped), countdown timer leak, HTML-escaped profile header, sync-error toast, safe localStorage migration
-- ⏳ Admin PYQ panel: paste verified GATE 2023/2024 scores via the panel (stored in Firestore, not in repo)
-- ⏳ `mocks/mock-1..3.pdf` are not in the repo → Mock download buttons 404 until added
-- ⏳ Sprint dates overlap on boundary days (S10/S11 on Oct 25, S11/S12 on Oct 28, S25/S26 on Jan 3) — confirm intended
-- ⚠️ Repo is **public** — this file contains personal emails; consider removing them or making repo private
+### 🗺️ File map
+| File | Purpose |
+|---|---|
+| `index.html` | Whole student app (Firebase Auth + Firestore, 31 sprints in `SPRINTS`, S13 skipped). Also the admin gate: `ADMIN_EMAIL`, `setupAdminMode()`, `adminOverviewHtml()`, `loadAdminHub()` |
+| `admin-hub.js` | **Admin-only module** (dynamic `import()` after admin check). `createAdminHub({root, db, doc, getDoc, setDoc, esc, overviewHtml, sprints})` → views: Overview, Today, Tracker, PYQ Index, Templates, Error Log, Insights, Playbook. Event delegation via `data-act`. Never saves before a successful load |
+| `admin-data.js` | **AUTO-GENERATED** (50 topics, 440 PYQs, 44 templates, subject/GA/trend tables) from `GATE_CS_PYQ_Analysis_S16.md` + `GATE_PYQ_Analysis.md`. Regenerate: `python tools/build_admin_data.py` |
+| `tools/test_admin_hub.mjs` | jsdom test of the hub with mocked Firestore (`npm i jsdom`, run from `tools/`; needs `{"type":"module"}` package.json). Keep it green after every hub change |
+| `firestore.rules` | Correct rules (admin/* → admin only, users/{uid} → owner only). **Owner must paste into Firebase Console → Publish.** Verify it is published (user pasted their own buggy version earlier: `!request.path.size() > 3` breaks everything) |
+| `GATE_CS_PYQ_Analysis_S16.md` | **Preferred analysis** (user likes it): 16 Tier-S topics ≈ 47 marks/paper, exact PYQ index, templates |
+| `GATE_PYQ_Analysis.md` | Older 71-bucket analysis (used for trends + GA patterns) |
 
-## 🎯 NEXT TASK
+### 🗄️ Firestore data
+- `users/{uid}` → student progress (deliverables, mocks…)
+- `admin/pyq_stats` → PYQ scores JSON pasted in Overview panel (private; never put scores in repo)
+- `admin/tracker` → hub state: `{q:{<qkey>:1|2}, t:{<topicId>:{concept,rev2,note,last}}, tpl:{<id>:true}, err:[{id,date,paper,topic,type,logic,retry}], v:1}`. `qkey` like `24S1Q43`; 1=correct, 2=wrong. Topic ids look like `s_graph_algos_bfs_dfs_mst_short`
 
-Pick from the ⏳ list above, or new admin features (e.g. analytics charts for PYQ trend, editable sprint text).
+### ✅ Done
+Admin mode (badge, gate, rules), Admin Hub v1 (pushed, 24/24 jsdom tests pass), sprint-count/timer/XSS/sync-toast fixes, README security section.
 
-> Don't auto-commit analysis `.md` files edits without asking. Never store personal scores/data in the repo.
+### 🧭 User decisions (do not re-ask)
+- Goal = **complete ALL Tier S (16) + Tier A (15) topics**, regardless of subject. Subject-wise thinking no longer matters to him.
+- **Compiler Design is IN** (it overlaps TOC/AFL: ~59% of CD marks are Parsing/SDD/Lexical). `SPRINTS` still has NO compiler sprint → either add 2 sprints after TOC Part 3 (S22) or rely on the topic plan below.
+- S16 file is preferred over the older analysis.
+
+## 🎯 NEXT TASK (IN PROGRESS): full-site redesign for admin
+
+User wants the **entire website to look/work differently for the admin**, not just an Admin tab. Spec:
+1. In admin mode hide the student shell (nav tabs except admin, other `.tab-content`, footer) via `body.admin-mode` CSS; keep logo + profile/logout. Provide a **"👁️ Student view"** toggle to see the normal site.
+2. **Topic-first, not subject-first.** Default view = **Roadmap/Today**: an ordered path of the 31 S+A topics (dependency-aware: Regular langs → CFG/PDA → Parsing → SDD → Code-opt; Number repr → Cache → Pipelining → Instr format; Process → Paging → CPU sched → File sys …), 1 topic/day (31 days from plan start, stored in `admin/tracker.plan.start`), ahead/behind indicator.
+3. Today = current topic checklist with **inline PYQ chips** (concept ✓ → solve PYQs → logic one-liner → rev). Topic "done" = concept ✓ and ≥80% of its PYQ bank solved.
+4. Keep Tracker, Templates, Error Log (ROI ranker), Insights, Playbook, Overview (PYQ JSON + backup).
+5. Distinct admin look (own palette/sidebar on desktop, bottom nav on mobile).
+6. Remove the now-obsolete "Compiler gap" warning in Today once the plan includes Compiler topics.
+
+## ⚠️ Known caveats
+- `mocks/*.pdf` missing from repo → mock download buttons 404.
+- Sprint dates overlap on boundary days (S10/S11 Oct 25, S11/S12 Oct 28, S25/S26 Jan 3) — confirm intended.
+- Repo is **public**; this file contains personal emails. Consider removing them or making the repo private.
+- **GitHub token:** the user pastes a PAT in chat for pushing. NEVER write it into any file. Use it only transiently: `git -c http.extraheader="Authorization: Basic $(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)" push origin main`. Ask the user to revoke it when done.
+- Prefer committing quickly (user worries about running out of tokens), then testing.
 
 ---
 
