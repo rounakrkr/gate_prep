@@ -17,6 +17,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // 1. load failure must block saving
 failLoad = true;
+let opened = null;
 let hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '<b>OV</b>' });
 hub.mount(); await wait(20); nav('tracker');
 ok(root.textContent.includes('Saving is disabled'), 'load error shows warning, no editing');
@@ -25,7 +26,7 @@ await hub.destroy();
 
 // 2. normal flow
 failLoad = false; root.innerHTML = '';
-hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '<b>OV</b>', examDate: new Date(Date.now() + 100 * 86400000), onStudentView: () => { studentCalled = true; } });
+hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '<b>OV</b>', examDate: new Date(Date.now() + 100 * 86400000), onStudentView: () => { studentCalled = true; }, papers: [{ id: 101, label: 'GATE 2026', sub: 'CS · Set 1' }], onOpenPaper: (id, pg) => { opened = [id, pg]; } });
 hub.mount(); await wait(20);
 ok(root.textContent.includes('days to GATE'), 'hero shows countdown');
 nav('overview'); ok(root.textContent.includes('OV'), 'overview renders');
@@ -74,6 +75,10 @@ root.querySelector('#ah-e-topic').value = TOPICS.find(t => t.tier === 'S').id;
 click(root.querySelector('[data-act=erradd]'));
 ok(!root.querySelector('#ah-view img'), 'XSS escaped in error log'); ok(root.textContent.includes('Highest ROI'), 'ROI ranker appears');
 await hub.flush(); ok(store.err.length === 1, 'error saved to store');
+nav('err'); root.querySelector('#ah-e-pid').value = '101'; root.querySelector('#ah-e-paper').value = 'Q43'; root.querySelector('#ah-e-page').value = '7'; root.querySelector('#ah-e-logic').value = 'recheck';
+click(root.querySelector('[data-act=erradd]'));
+await hub.flush(); ok(store.err.length === 2 && store.err[1].pid === 101 && store.err[1].page === 7, 'error stores paper id + page');
+click(root.querySelector('[data-act=erropen]')); ok(opened && opened[0] === 101 && opened[1] === 7, 'error Open button opens paper at the page');
 await hub.destroy();
 
 // 3. reload restores state

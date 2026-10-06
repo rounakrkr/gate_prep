@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a1a">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="GATEway">
     <title>GATEway 2027 — KIIT CSE</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
     <style>
@@ -1447,7 +1453,7 @@
             });
             return pdfjsPromise;
         }
-        async function renderPdfPages(url, body, token) {
+        async function renderPdfPages(url, body, token, startPage) {
             body.innerHTML = '<p class="pv-msg">Loading paper… ⏳</p>';
             try {
                 const lib = await loadPdfJs();
@@ -1466,27 +1472,29 @@
                     cv.className = 'pv-page';
                     body.appendChild(cv);
                     await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                    if (startPage && i === startPage) cv.scrollIntoView();
                 }
             } catch (err) {
                 if (token === pvToken) body.innerHTML = '<p class="pv-msg">Paper load nahi hua 😕 "New tab" button try karo.</p>';
             }
         }
-        function openPaper(id) {
+        function openPaper(id, startPage) {
             const paper = MOCK_TESTS.find(m => m.id === id);
             if (!paper) return;
             const token = ++pvToken;
             document.getElementById('pv-title').textContent = `📖 ${paper.label} · ${paper.sub}`;
-            document.getElementById('pv-new').href = paper.pdf;
+            const pg = Number.isInteger(startPage) && startPage > 0 ? startPage : null;
+            document.getElementById('pv-new').href = paper.pdf + (pg ? '#page=' + pg : '');
             const body = document.getElementById('pv-body');
             body.innerHTML = '';
             document.getElementById('paper-viewer').classList.add('open');
             document.body.style.overflow = 'hidden';
             if (navigator.pdfViewerEnabled) {
                 const f = document.createElement('iframe');
-                f.src = paper.pdf; f.title = paper.label;
+                f.src = paper.pdf + (pg ? '#page=' + pg : ''); f.title = paper.label;
                 body.appendChild(f);
             } else {
-                renderPdfPages(paper.pdf, body, token);   // phones / browsers without a built-in PDF viewer
+                renderPdfPages(paper.pdf, body, token, pg);   // phones / browsers without a built-in PDF viewer
             }
         }
         function closePaper() {

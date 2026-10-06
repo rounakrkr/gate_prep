@@ -251,20 +251,27 @@ ${chipsHtml(t)}
 <div class="ah-logic"><small>${x.kind === 'A' ? "💡 What's the same" : '🧠 Core logic to practise'}</small><div>${e(x.logic)}</div></div></div>`;
     }).join('') || '<p class="ah-muted">No match.</p>';
 
+    function errPaper(r) {
+        const p = r.pid ? papers.find(x => x.id === r.pid) : null;
+        if (!p) return e(r.paper);
+        return `<b>${e(p.label)} · ${e(p.sub)}</b>${r.paper ? ' · ' + e(r.paper) : ''}${r.page ? ' · p.' + e(r.page) : ''}<br><button class="ah-btn" data-act="erropen" data-id="${e(r.id)}">📖 Open</button>`;
+    }
+
     function vErr() {
         const topicOpts = '<option value="">— topic —</option>' + TOPICS.map(t => `<option value="${t.id}">${t.tier} · ${e(t.name)}</option>`).join('');
+        const paperOpts = '<option value="">— paper —</option>' + papers.map(p => `<option value="${e(p.id)}">${e(p.label)} · ${e(p.sub)}</option>`).join('');
         const by = {}, roi = {};
         S.err.forEach(r => { by[r.type] = (by[r.type] || 0) + 1; if (r.topic) roi[r.topic] = (roi[r.topic] || 0) + 1; });
         const top = Object.entries(roi).map(([id, n]) => ({ t: byId[id], n })).filter(x => x.t).sort((a, b) => b.n * b.t.avg - a.n * a.t.avg).slice(0, 5);
         return `<div class="ah-card"><h3>➕ Log a mistake</h3>
-<div class="ah-row"><input class="ah-in" id="ah-e-paper" placeholder="Paper & Q (e.g. '24-S1 Q43)" maxlength="40"><select class="ah-sel" id="ah-e-topic">${topicOpts}</select>
+<div class="ah-row"><select class="ah-sel" id="ah-e-pid">${paperOpts}</select><input class="ah-in" id="ah-e-paper" placeholder="Q no. / note (e.g. Q43)" maxlength="40"><input class="ah-in" id="ah-e-page" type="number" min="1" max="200" placeholder="PDF page (opt.)" style="max-width:130px"><select class="ah-sel" id="ah-e-topic">${topicOpts}</select>
 <select class="ah-sel" id="ah-e-type">${ERR_TYPES.map(x => `<option>${x}</option>`).join('')}</select></div>
 <textarea class="ah-txt" id="ah-e-logic" maxlength="500" placeholder="Correct logic in one line…"></textarea>
 <div style="margin-top:8px"><button class="ah-btn on" data-act="erradd">Add</button></div></div>
 ${S.err.length ? `<div class="ah-card"><h3>📊 Where you lose marks</h3><div class="ah-chips">${Object.entries(by).map(([k, n]) => `<span class="ah-tag">${e(k)} · ${n}</span>`).join('')}</div>
 ${top.length ? `<p class="ah-muted" style="margin-top:10px">Highest ROI to fix (errors × avg marks/paper):</p>${top.map(x => `<div>• <b>${e(x.t.name)}</b> — ${x.n} error${x.n > 1 ? 's' : ''} · ${x.t.avg} marks/paper</div>`).join('')}` : ''}</div>` : ''}
 <div class="ah-card ah-scroll"><table class="ah-tbl"><tr><th>Date</th><th>Paper & Q</th><th>Topic</th><th>Type</th><th>Correct logic</th><th>Retried</th><th></th></tr>
-${S.err.slice().reverse().map(r => `<tr><td>${e(r.date)}</td><td>${e(r.paper)}</td><td>${e(topicLabel(r.topic))}</td><td>${e(r.type)}</td><td>${e(r.logic)}</td>
+${S.err.slice().reverse().map(r => `<tr><td>${e(r.date)}</td><td>${errPaper(r)}</td><td>${e(topicLabel(r.topic))}</td><td>${e(r.type)}</td><td>${e(r.logic)}</td>
 <td><input type="checkbox" data-act="errretry" data-id="${e(r.id)}" ${r.retry ? 'checked' : ''}></td><td><button class="ah-btn" data-act="errdel" data-id="${e(r.id)}">✕</button></td></tr>`).join('') || '<tr><td colspan="7" class="ah-muted">No mistakes logged yet.</td></tr>'}</table></div>`;
     }
 
@@ -363,9 +370,13 @@ ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" dat
         } else if (a === 'erradd') {
             const g = id => root.querySelector(id).value.trim();
             const logic = g('#ah-e-logic'), paper = g('#ah-e-paper');
-            if (!logic && !paper) return;
-            S.err.push({ id: Date.now().toString(36), date: new Date().toISOString().slice(0, 10), paper: paper.slice(0, 40), topic: g('#ah-e-topic'), type: g('#ah-e-type'), logic: logic.slice(0, 500), retry: false });
+            const pid = Number(g('#ah-e-pid')) || null, pageN = parseInt(g('#ah-e-page'), 10);
+            if (!logic && !paper && !pid) return;
+            S.err.push({ id: Date.now().toString(36), date: new Date().toISOString().slice(0, 10), paper: paper.slice(0, 40), pid: papers.some(p => p.id === pid) ? pid : null, page: pageN > 0 && pageN <= 200 ? pageN : null, topic: g('#ah-e-topic'), type: g('#ah-e-type'), logic: logic.slice(0, 500), retry: false });
             save(); render();
+        } else if (a === 'erropen') {
+            const r = S.err.find(r => r.id === b.dataset.id);
+            if (r && r.pid && onOpenPaper) onOpenPaper(r.pid, r.page || undefined);
         } else if (a === 'errdel') { S.err = S.err.filter(r => r.id !== b.dataset.id); save(); render(); }
     }
     function onChange(ev) {
