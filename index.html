@@ -588,6 +588,19 @@
         .admin-btn.ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
         .admin-note { color: var(--text-muted); font-size: 0.8rem; margin-top: 8px; }
 
+        /* ===== PAPER VIEWER ===== */
+        .paper-open-btn { display: inline-block; margin: 8px 0 14px; padding: 9px 18px; background: rgba(108,92,231,0.15); color: var(--purple); border: 1px solid rgba(108,92,231,0.25); border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+        .paper-open-btn:hover { background: rgba(108,92,231,0.28); }
+        .paper-viewer { display: none; position: fixed; inset: 0; z-index: 2000; background: var(--bg-primary); flex-direction: column; }
+        .paper-viewer.open { display: flex; }
+        .pv-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); font-weight: 600; }
+        .pv-sp { flex: 1; }
+        .pv-bar a, .pv-bar button { color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+        .pv-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; text-align: center; }
+        .pv-body iframe { width: 100%; height: 100%; border: 0; display: block; }
+        .pv-page { display: block; margin: 8px auto; background: #fff; }
+        .pv-msg { padding: 40px 16px; color: var(--text-secondary); }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .container { padding: 0 16px; }
@@ -694,6 +707,13 @@
 
     <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
         <div class="modal" id="modal-content"></div>
+    </div>
+
+    <div class="paper-viewer" id="paper-viewer">
+        <div class="pv-bar"><span id="pv-title"></span><span class="pv-sp"></span>
+            <a id="pv-new" target="_blank" rel="noopener">↗️ New tab</a>
+            <button onclick="closePaper()">✕ Close</button></div>
+        <div class="pv-body" id="pv-body"></div>
     </div>
 
     <div class="momos-toast" id="momos-toast">🥟 Sprint complete! Momos earned!</div>
@@ -816,10 +836,17 @@
               deliverables: ["No new topics", "Light formula review", "Momos + Genshin + Sleep"] },
         ];
 
+        // Every paper in /pyqs, newest first. ids are new (101+) so old saved mock_1..3 scores are never reused.
         const MOCK_TESTS = [
-            { id: 1, sprint: 24, label: "Mock Test 1", targetDate: "Dec 28-31", pdf: "mocks/mock-1.pdf" },
-            { id: 2, sprint: 27, label: "Mock Test 2", targetDate: "Jan 8-11", pdf: "mocks/mock-2.pdf" },
-            { id: 3, sprint: 29, label: "Mock Test 3", targetDate: "Jan 16-19", pdf: "mocks/mock-3.pdf" },
+            { id: 101, label: "GATE 2026", sub: "CS · Set 1", pdf: "pyqs/CS1_2026.pdf" },
+            { id: 102, label: "GATE 2026", sub: "CS · Set 2", pdf: "pyqs/CS2_2026.pdf" },
+            { id: 103, label: "GATE 2025", sub: "CS · Set 1", pdf: "pyqs/CS1_2025.pdf" },
+            { id: 104, label: "GATE 2025", sub: "CS · Set 2", pdf: "pyqs/CS2_2025.pdf" },
+            { id: 105, label: "GATE 2024", sub: "CS · Set 1", pdf: "pyqs/CS1_2024.pdf" },
+            { id: 106, label: "GATE 2024", sub: "CS · Set 2", pdf: "pyqs/CS2_2024.pdf" },
+            { id: 107, label: "GATE 2023", sub: "CS", pdf: "pyqs/CS_2023.pdf" },
+            { id: 108, label: "GATE 2022", sub: "CS", pdf: "pyqs/CS_2022.pdf" },
+            { id: 109, label: "GATE 2021", sub: "CS", pdf: "pyqs/CS_2021.pdf" },
         ];
 
         // ===== STATE (Firestore-backed with local cache) =====
@@ -980,7 +1007,7 @@
                 const mod = await import('./admin-hub.js');
                 const root = document.getElementById('tab-admin');
                 if (!isAdmin || !root) return;
-                adminHub = mod.createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml: adminOverviewHtml, examDate: GATE_DATE, onStudentView: toggleStudentView });
+                adminHub = mod.createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml: adminOverviewHtml, examDate: GATE_DATE, onStudentView: toggleStudentView, papers: MOCK_TESTS, onOpenPaper: openPaper });
                 adminHub.mount();
             } catch (err) {
                 console.error('Admin hub failed to load', err);
@@ -1397,14 +1424,79 @@
                 const score = getMockScore(mock.id);
                 const scoreColor = score !== null ? (score >= 55 ? 'var(--green)' : score >= 40 ? 'var(--accent-2)' : 'var(--red)') : 'var(--text-muted)';
                 return `<div class="mock-card"><div class="mock-num">${mock.label}</div>
-                    <a href="${mock.pdf}" download style="display:inline-block;margin-bottom:12px;padding:8px 16px;background:rgba(108,92,231,0.15);color:var(--purple);border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;transition:all 0.3s;border:1px solid rgba(108,92,231,0.2)" onmouseover="this.style.background='rgba(108,92,231,0.25)'" onmouseout="this.style.background='rgba(108,92,231,0.15)'">📥 Download Paper</a>
-                    ${score !== null ? `<div class="mock-score" style="color:${scoreColor}">${score}/100</div><div class="mock-date">${mock.targetDate}</div>` :
-                    `<div class="mock-score pending">Not taken yet</div><div class="mock-date">${mock.targetDate}</div>
+                    <div class="mock-date">${mock.sub}</div>
+                    <button class="paper-open-btn" onclick="openPaper(${mock.id})">📖 Open Paper</button>
+                    ${score !== null ? `<div class="mock-score" style="color:${scoreColor}">${score}/100</div>` :
+                    `<div class="mock-score pending">Not taken yet</div>
                     <div class="mock-input-group"><input type="number" min="0" max="100" step="0.5" placeholder="Score" id="mock-input-${mock.id}">
                     <button onclick="saveMockScore(${mock.id}, document.getElementById('mock-input-${mock.id}').value)">Save</button></div>`}
                 </div>`;
             }).join('');
         }
+
+        // ===== IN-APP PAPER VIEWER (students + admin) =====
+        let pvToken = 0, pdfjsPromise = null;
+        function loadPdfJs() {
+            if (pdfjsPromise) return pdfjsPromise;
+            const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+            pdfjsPromise = new Promise((res, rej) => {
+                const sc = document.createElement('script');
+                sc.src = base + 'pdf.min.js';
+                sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+                sc.onerror = () => { pdfjsPromise = null; rej(new Error('pdf.js load failed')); };
+                document.head.appendChild(sc);
+            });
+            return pdfjsPromise;
+        }
+        async function renderPdfPages(url, body, token) {
+            body.innerHTML = '<p class="pv-msg">Loading paper… ⏳</p>';
+            try {
+                const lib = await loadPdfJs();
+                const pdf = await lib.getDocument(url).promise;
+                if (token !== pvToken) return;
+                body.innerHTML = '';
+                const width = Math.min(body.clientWidth - 16, 900), dpr = window.devicePixelRatio || 1;
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    if (token !== pvToken) return;
+                    const vp0 = page.getViewport({ scale: 1 });
+                    const vp = page.getViewport({ scale: (width / vp0.width) * dpr });
+                    const cv = document.createElement('canvas');
+                    cv.width = vp.width; cv.height = vp.height;
+                    cv.style.width = width + 'px'; cv.style.height = (vp.height / dpr) + 'px';
+                    cv.className = 'pv-page';
+                    body.appendChild(cv);
+                    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                }
+            } catch (err) {
+                if (token === pvToken) body.innerHTML = '<p class="pv-msg">Paper load nahi hua 😕 "New tab" button try karo.</p>';
+            }
+        }
+        function openPaper(id) {
+            const paper = MOCK_TESTS.find(m => m.id === id);
+            if (!paper) return;
+            const token = ++pvToken;
+            document.getElementById('pv-title').textContent = `📖 ${paper.label} · ${paper.sub}`;
+            document.getElementById('pv-new').href = paper.pdf;
+            const body = document.getElementById('pv-body');
+            body.innerHTML = '';
+            document.getElementById('paper-viewer').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            if (navigator.pdfViewerEnabled) {
+                const f = document.createElement('iframe');
+                f.src = paper.pdf; f.title = paper.label;
+                body.appendChild(f);
+            } else {
+                renderPdfPages(paper.pdf, body, token);   // phones / browsers without a built-in PDF viewer
+            }
+        }
+        function closePaper() {
+            pvToken++;
+            document.getElementById('paper-viewer').classList.remove('open');
+            document.getElementById('pv-body').innerHTML = '';
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closePaper(); });
 
         // ===== MODAL =====
         function openSprintModal(sprintId) {
@@ -1497,6 +1589,8 @@
         window.closeModal = closeModal;
         window.switchTab = switchTab;
         window.resetAllData = resetAllData;
+        window.openPaper = openPaper;
+        window.closePaper = closePaper;
         window.saveAdminPyq = saveAdminPyq;
         window.editAdminPyq = editAdminPyq;
         window.cancelAdminPyq = cancelAdminPyq;

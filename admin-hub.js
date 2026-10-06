@@ -4,7 +4,7 @@
 import { PAPERS, TOPICS, SUBJECTS, TEMPLATES, GA_ROWS, GA_PATTERNS, TRENDS } from './admin-data.js';
 
 const VIEWS = [['today', '🎯 Today'], ['roadmap', '🗺️ Roadmap'], ['tracker', '📋 Tracker'], ['pyq', '📚 PYQ Index'],
-    ['tpl', '🔁 Templates'], ['err', '🐞 Error Log'], ['insights', '📈 Insights'], ['playbook', '🛣️ Playbook'], ['overview', '🛠️ Scores & Tools']];
+    ['tpl', '🔁 Templates'], ['err', '🐞 Error Log'], ['insights', '📈 Insights'], ['playbook', '🛣️ Playbook'], ['papers', '📄 Papers'], ['overview', '🛠️ Scores & Tools']];
 // Dependency-aware learning order of ALL Tier S (16) + Tier A (15) topics — one topic per day.
 // Chains: Regular → CFG/PDA → Parsing → SDD → Code-opt · Number repr → Cache → Pipelining → Instr. format · Process → Paging → CPU sched → File sys
 const ORDER_NAMES = ['C output tracing', 'Trees, BST', 'Graph algos', 'Graph theory', 'Regular langs', 'CFG, PDA', 'Parsing',
@@ -79,7 +79,7 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
 
-export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml, examDate, onStudentView }) {
+export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml, examDate, onStudentView, papers = [], onOpenPaper }) {
     const e = esc || (s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
     const ref = () => doc(db, 'admin', 'tracker');
     const byId = Object.fromEntries(TOPICS.map(t => [t.id, t]));
@@ -295,13 +295,19 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
             'Keep the error log: it is the cheapest way to move your score up.'])}</div>`;
     }
 
-    const RENDER = { overview: vOverview, today: vToday, roadmap: vRoadmap, tracker: vTracker, pyq: vPyq, tpl: vTpl, err: vErr, insights: vInsights, playbook: vPlaybook };
+    function vPapers() {
+        if (!papers.length) return '<div class="ah-card"><p class="ah-muted">No papers configured.</p></div>';
+        return `<div class="ah-card"><h3>📄 Papers</h3><p class="ah-muted">Open a paper right here and solve it. Save scores from Student view → Mock Tests.</p></div>
+<div class="ah-grid">${papers.map(p => `<div class="ah-card"><div class="ah-muted">${e(p.sub)}</div><h3>${e(p.label)}</h3><button class="ah-btn on" data-act="paper" data-id="${e(p.id)}">📖 Open paper</button></div>`).join('')}</div>`;
+    }
+
+    const RENDER = { overview: vOverview, today: vToday, roadmap: vRoadmap, tracker: vTracker, pyq: vPyq, tpl: vTpl, err: vErr, insights: vInsights, playbook: vPlaybook, papers: vPapers };
     const STATUS = { loading: '⏳ Loading…', saved: '💾 Saved', saving: '⏳ Saving…', saveerr: '⚠️ Save failed — will retry on next change', loaderr: '⚠️ Could not load tracker' };
     function paintStatus() { const el = root.querySelector('#ah-status'); if (el) el.textContent = STATUS[ui.status] || ''; }
 
     function render() {
         if (dead) return;
-        const needsData = ui.view !== 'overview';
+        const needsData = ui.view !== 'overview' && ui.view !== 'papers';
         let body;
         if (needsData && ui.status === 'loaderr') body = `<div class="ah-card ah-warn"><p>Could not load your tracker from Firestore. Saving is disabled so existing data is never overwritten. Check the Firestore rules and your login.</p><button class="ah-btn on" data-act="retry">Retry</button></div>`;
         else if (needsData && !loaded) body = '<p class="ah-muted">Loading…</p>';
@@ -322,6 +328,7 @@ ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" dat
         const a = b.dataset.act;
         if (a === 'view') { ui.view = b.dataset.k; render(); }
         else if (a === 'retry') load();
+        else if (a === 'paper') { if (onOpenPaper) onOpenPaper(Number(b.dataset.id)); }
         else if (a === 'student') { if (onStudentView) onStudentView(); }
         else if (a === 'focus') { ui.focus = b.dataset.t; ui.view = 'today'; render(); }
         else if (a === 'auto') { ui.focus = null; render(); }
