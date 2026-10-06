@@ -317,11 +317,21 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
         else if (needsData && !loaded) body = '<p class="ah-muted">Loading…</p>';
         else body = RENDER[ui.view]();
         const P = planInfo(), days = examDate ? Math.max(0, Math.ceil((examDate - Date.now()) / DAY)) : null;
+        const prevSide = root.querySelector('.ah-side'), prevLeft = prevSide ? prevSide.scrollLeft : 0;
         root.innerHTML = `<div class="ah-shell"><nav class="ah-side"><div class="ah-brand">👑 Command Center</div>
 ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" data-act="view" data-k="${k}">${l}</button>`).join('')}
 <span class="ah-spacer"></span><button class="ah-btn" data-act="student">👁️ Student view</button><span class="ah-save" id="ah-status"></span></nav>
 <main class="ah-main">${loaded ? `<div class="ah-hero"><div><div class="ah-big">${days === null ? '—' : days}</div><div class="ah-muted">days to GATE</div></div>
 <div style="flex:1;min-width:180px"><b>${P.doneN}/${ORDER.length}</b> Tier S+A topics · ${paceTxt(P)}${bar(P.doneN / ORDER.length)}</div></div>` : ''}<div id="ah-view">${body}</div></main></div>`;
+        // keep the phone nav slider where it was (the whole nav is rebuilt on each render), and keep the active tab in view
+        const side = root.querySelector('.ah-side');
+        if (side) {
+            side.scrollLeft = prevLeft;
+            const on = side.querySelector('.ah-btn.on');
+            if (on && (on.offsetLeft < side.scrollLeft || on.offsetLeft + on.offsetWidth > side.scrollLeft + side.clientWidth)) {
+                side.scrollLeft = on.offsetLeft - (side.clientWidth - on.offsetWidth) / 2;
+            }
+        }
         paintStatus();
     }
 
