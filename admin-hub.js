@@ -44,7 +44,7 @@ const CSS = `
 .ah-q.q1{background:rgba(46,204,113,.22);border-color:#2ecc71}.ah-q.q2{background:rgba(229,72,77,.22);border-color:#e5484d}.ah-q small{opacity:.6;margin-left:4px}
 .ah-in,.ah-sel,.ah-txt{background:var(--bg-secondary,#1b1b24);border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:8px 10px;font:inherit;font-size:.85rem}
 .ah-txt{width:100%;min-height:54px;box-sizing:border-box}.ah-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
-.ah-shell{display:grid;grid-template-columns:215px 1fr;gap:22px;align-items:start}
+.ah-shell{display:grid;grid-template-columns:215px minmax(0,1fr);gap:22px;align-items:start}.ah-main{min-width:0}
 .ah-side{position:sticky;top:12px;display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card)}
 .ah-side .ah-btn{border-radius:12px;text-align:left}.ah-brand{font-weight:700;margin-bottom:6px}.ah-spacer{height:10px}
 .ah-hero{display:flex;flex-wrap:wrap;gap:20px;align-items:center;padding:20px;margin-bottom:20px;border-radius:var(--radius);border:1px solid rgba(247,201,72,.35);background:linear-gradient(135deg,rgba(247,201,72,.1),rgba(255,107,53,.06))}
@@ -75,7 +75,7 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;font-size:.78rem;color:var(--text-secondary)}
 .ah-trk td:not(:first-child):not(:last-child),.ah-trk th:not(:first-child):not(:last-child){text-align:center}
 .ah-trk .ah-prog{margin:6px auto 0;max-width:120px}.ah-trk td:last-child .ah-in{width:100%;min-width:170px;box-sizing:border-box}
-@media(max-width:1200px){.ah-trk th:nth-child(2),.ah-trk td:nth-child(2),.ah-trk th:nth-child(3),.ah-trk td:nth-child(3){display:none}}
+@media(max-width:1000px){.ah-trk th:nth-child(2),.ah-trk td:nth-child(2),.ah-trk th:nth-child(3),.ah-trk td:nth-child(3){display:none}}
 @media(max-width:760px){.ah-trk th:nth-child(6),.ah-trk td:nth-child(6){display:none}.ah-trk th,.ah-trk td{padding:8px 6px}.ah-trk td:last-child .ah-in{min-width:130px}.ah-trk .ah-topic{min-width:130px}}
 .ah-trk tbody tr:hover,.ah-trk tr:hover td{background:rgba(255,255,255,.02)}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
