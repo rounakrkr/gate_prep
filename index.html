@@ -945,9 +945,31 @@
             }
             document.querySelectorAll('[data-admin-only]').forEach(el => el.remove());
             isAdmin = false;
+            if (adminHub) { adminHub.destroy(); adminHub = null; }
             adminPyq = undefined;
             adminPyqError = null;
             adminEditing = false;
+        }
+
+        let adminHub = null;
+
+        function renderAdminPanel() {
+            const el = document.getElementById('tab-admin');
+            if (!isAdmin || !el) return;
+            if (adminHub) { adminHub.refreshOverview(); return; }
+            el.innerHTML = adminOverviewHtml();   // fallback until the hub module has loaded
+        }
+
+        async function loadAdminHub() {
+            try {
+                const mod = await import('./admin-hub.js');
+                const root = document.getElementById('tab-admin');
+                if (!isAdmin || !root) return;
+                adminHub = mod.createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml: adminOverviewHtml, sprints: SPRINTS });
+                adminHub.mount();
+            } catch (err) {
+                console.error('Admin hub failed to load', err);
+            }
         }
 
         function setupAdminMode() {
@@ -977,6 +999,7 @@
 
             renderAdminPanel();
             loadAdminPyq();
+            loadAdminHub();
         }
 
         async function loadAdminPyq() {
@@ -1026,9 +1049,8 @@
             URL.revokeObjectURL(a.href);
         }
 
-        function renderAdminPanel() {
-            const el = document.getElementById('tab-admin');
-            if (!isAdmin || !el) return;
+        function adminOverviewHtml() {
+            if (!isAdmin) return '';
 
             const totalD = SPRINTS.reduce((a, s) => a + s.deliverables.length, 0);
             const doneD = SPRINTS.reduce((a, s) => a + getSprintProgress(s).done, 0);
@@ -1059,8 +1081,8 @@
                     <button class="admin-btn ghost" onclick="editAdminPyq()">✏️ Edit</button>`;
             }
 
-            el.innerHTML = `
-                <div class="section-header"><h2>👑 Admin Panel</h2><div class="line"></div></div>
+            return `
+                <div class="section-header"><h2>📋 Overview</h2><div class="line"></div></div>
                 <div class="admin-grid">
                     <div class="admin-card"><div class="label">Deliverables</div><div class="value">${doneD}/${totalD}</div></div>
                     <div class="admin-card"><div class="label">Sprints done</div><div class="value">${sprintsDone}/${SPRINTS.length}</div></div>
@@ -1105,7 +1127,8 @@
             }
         }
 
-        function handleLogout() {
+        async function handleLogout() {
+            try { if (adminHub) await adminHub.flush(); } catch (e) { /* ignore */ }
             signOut(auth);
         }
 
