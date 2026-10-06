@@ -69,12 +69,13 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-logic{margin-top:14px;padding:14px 18px;border-left:3px solid #f7c948;background:rgba(247,201,72,.06);border-radius:0 12px 12px 0;line-height:1.65;font-size:.92rem}
 .ah-logic small{display:block;margin-bottom:4px;color:var(--text-secondary);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
 .ah-main a{color:inherit;text-decoration:none}
-.ah-trk td,.ah-trk th{padding:16px 14px}.ah-trk .ah-topic{min-width:300px;max-width:380px}
+.ah-trk td,.ah-trk th{padding:14px 10px}.ah-trk .ah-topic{min-width:230px;max-width:320px}.ah-trk td:nth-child(5){min-width:100px!important}
 .ah-trk .ah-topic a{display:inline-block;font-weight:600;font-size:.95rem;line-height:1.45;color:var(--text-primary);border-bottom:1px dashed rgba(247,201,72,.35);transition:color .15s,border-color .15s}
 .ah-trk .ah-topic a:hover{color:#f7c948;border-bottom-color:#f7c948}
 .ah-sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;font-size:.78rem;color:var(--text-secondary)}
 .ah-trk td:not(:first-child):not(:last-child),.ah-trk th:not(:first-child):not(:last-child){text-align:center}
-.ah-trk .ah-prog{margin:6px auto 0;max-width:120px}.ah-trk td:last-child .ah-in{width:100%;min-width:170px;box-sizing:border-box}
+.ah-trk .ah-prog{margin:6px auto 0;max-width:120px}.ah-trk td:last-child .ah-in{width:100%;min-width:140px;box-sizing:border-box}
+@media(max-width:1400px){.ah-trk th:nth-child(3),.ah-trk td:nth-child(3){display:none}}
 @media(max-width:1000px){.ah-trk th:nth-child(2),.ah-trk td:nth-child(2),.ah-trk th:nth-child(3),.ah-trk td:nth-child(3){display:none}}
 @media(max-width:760px){.ah-trk th:nth-child(6),.ah-trk td:nth-child(6){display:none}.ah-trk{font-size:.8rem}.ah-trk th,.ah-trk td{padding:8px 4px}.ah-trk td:nth-child(5){min-width:70px!important}.ah-trk td:last-child .ah-in{min-width:90px;width:100%;padding:8px}.ah-trk .ah-topic{min-width:105px}}
 @media(max-width:520px){.ah-trk th:nth-child(7),.ah-trk td:nth-child(7){display:none}}
