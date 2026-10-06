@@ -75,6 +75,8 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;font-size:.78rem;color:var(--text-secondary)}
 .ah-trk td:not(:first-child):not(:last-child),.ah-trk th:not(:first-child):not(:last-child){text-align:center}
 .ah-trk .ah-prog{margin:6px auto 0;max-width:120px}.ah-trk td:last-child .ah-in{width:100%;min-width:170px;box-sizing:border-box}
+@media(max-width:1200px){.ah-trk th:nth-child(2),.ah-trk td:nth-child(2),.ah-trk th:nth-child(3),.ah-trk td:nth-child(3){display:none}}
+@media(max-width:760px){.ah-trk th:nth-child(6),.ah-trk td:nth-child(6){display:none}.ah-trk th,.ah-trk td{padding:8px 6px}.ah-trk td:last-child .ah-in{min-width:130px}.ah-trk .ah-topic{min-width:130px}}
 .ah-trk tbody tr:hover,.ah-trk tr:hover td{background:rgba(255,255,255,.02)}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
