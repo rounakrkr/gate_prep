@@ -96,20 +96,22 @@ Both scores verified directly from official answer key PDFs using Python:
 - `admin/tracker` → hub state: `{q:{<qkey>:1|2}, t:{<topicId>:{concept,rev2,note,last}}, tpl:{<id>:true}, err:[{id,date,paper,topic,type,logic,retry}], v:1}`. `qkey` like `24S1Q43`; 1=correct, 2=wrong. Topic ids look like `s_graph_algos_bfs_dfs_mst_short`
 
 ### ✅ Done
-Admin mode (badge, gate, rules), Admin Hub v1 + full-site admin redesign (35/35 jsdom tests pass), sprint-count/timer/XSS/sync-toast fixes, README security section.
+Admin mode (badge, gate, rules), Admin Hub v1 + full-site admin redesign (38/38 jsdom tests pass), sprint-count/timer/XSS/sync-toast fixes, README security section.
 
 ### 🧭 User decisions (do not re-ask)
 - Goal = **complete ALL Tier S (16) + Tier A (15) topics**, regardless of subject. Subject-wise thinking no longer matters to him.
 - **Compiler Design is IN** (it overlaps TOC/AFL: ~59% of CD marks are Parsing/SDD/Lexical). `SPRINTS` still has NO compiler sprint → either add 2 sprints after TOC Part 3 (S22) or rely on the topic plan below.
 - S16 file is preferred over the older analysis.
 
-## ✅ Admin full-site redesign — DONE (6 Oct 2026, 35/35 jsdom tests)
+## ✅ Admin full-site redesign — DONE (6 Oct 2026, 38/38 jsdom tests)
 
 When `isAdmin`, `setupAdminMode()` adds `body.admin-mode`: the student shell (countdown, stats, nav tabs, footer, other tabs) is hidden by CSS and the user lands on `#tab-admin`, which the hub renders as a **sidebar Command Center** (bottom nav on mobile). `👁️ Student view` (sidebar) toggles `body.student-view`; a floating `#admin-back` button returns. If `admin-hub.js` fails to import, `admin-mode` is removed so the admin is never stranded.
 
 - **Topic-first plan:** `ORDER_NAMES` in `admin-hub.js` = all 31 Tier S+A topics in dependency order (Regular → CFG/PDA → Parsing → SDD → Code-opt; Number repr → Cache → Pipelining → Instr fmt; Process → Paging → CPU sched → File sys …), 1 topic/day from `admin/tracker.plan.start` (editable on Roadmap), ahead/behind indicator.
 - **Topic done** = concept ✓ AND ≥80% (`DONE_PCT`) of its PYQ bank solved → plan auto-advances.
 - **Views:** 🎯 Today (current topic checklist + inline PYQ chips, up-next, revision due) · 🗺️ Roadmap · 📋 Tracker · 📚 PYQ Index · 🔁 Templates · 🐞 Error Log (ROI ranker) · 📈 Insights · 🛣️ Playbook · 🛠️ Scores & Tools (old overview: PYQ JSON, backup).
+- **End-sem exams Nov 1–18 2026** (user confirmed): `BREAKS` const in `admin-hub.js` makes the 31-day plan skip those dates (plan from Oct 6 → 4 days in late Oct... then resumes Nov 19). Today shows a "paused" card during the break. Edit `BREAKS` for any other blackout.
+- **Student `SPRINTS` deliberately NOT changed** for Compiler Design: inserting sprints would shift dates for every student and risk orphaning saved progress keyed by sprint id. If the user still wants it, add NEW ids (33, 34), never renumber.
 - Compiler Design is now inside the plan (Parsing, SDD, Code-opt), so no `SPRINTS` change was needed.
 
 ## 🎯 NEXT IDEAS (not started)

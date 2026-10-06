@@ -46,6 +46,11 @@ nav('roadmap'); click(root.querySelector('[data-act=focus]:not([disabled])')); o
 click(root.querySelector('[data-act=auto]')); nav('roadmap');
 const ps = root.querySelector('[data-act=planstart]'); ps.value = new Date(Date.now() - 5 * 86400000).toISOString().slice(0, 10); ps.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 ok(root.textContent.includes('behind'), 'behind-schedule indicator');
+const ps2 = root.querySelector('[data-act=planstart]'); ps2.value = '2026-10-28'; ps2.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+const dts = [...root.querySelectorAll('tr td:nth-child(2)')].map(x => x.textContent);
+ok(dts.length === 31 && dts[3] === '10-31' && dts[4] === '11-19', 'plan skips end-sem break (Oct 31 → Nov 19)');
+ok(!dts.some(d => d >= '11-01' && d <= '11-18'), 'no topic scheduled Nov 1–18');
+ok(dts[30] === '12-15', 'plan end date after break');
 nav('pyq');
 const t0 = root.querySelector('[data-act=pick]').value;
 const k = root.querySelector('[data-act=q].q0').dataset.k;      // an unsolved chip (earlier steps solved others)

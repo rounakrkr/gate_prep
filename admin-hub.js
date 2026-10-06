@@ -12,6 +12,15 @@ const ORDER_NAMES = ['C output tracing', 'Trees, BST', 'Graph algos', 'Graph the
     'Syntax-directed', 'Code optimization', 'Decidability', 'Asymptotics', 'Stack & queue', 'CPU scheduling', 'File systems',
     'Instruction format', 'FDs & normalization', 'Relational algebra', 'Transactions', 'Link performance', 'TCP / HTTP', 'Sets, relations', 'Calculus'];
 const DONE_PCT = 0.8;
+// Days with no study topics (end-sem exams). ISO dates, inclusive. The plan skips these.
+const BREAKS = [['2026-11-01', '2026-11-18', 'End-sem exams']];
+const brk = d => BREAKS.find(([a, b]) => d >= a && d <= b);
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function planDates(start, n) {           // n study days from `start`, skipping BREAKS
+    const out = []; const d = new Date(start + 'T00:00:00');
+    while (out.length < n) { const k = iso(d); if (!brk(k)) out.push(k); d.setDate(d.getDate() + 1); }
+    return out;
+}
 const ERR_TYPES = ['🧠 Concept gap', '🧮 Calculation', '⏱️ Time pressure', '👀 Misread', '🎲 Guess', '⬜ Skipped'];
 const TIER_LABEL = { S: '🔴 S', A: '🟠 A', B: '🟡 B', C: '🟢 C' };
 const DAY = 86400000;
@@ -50,7 +59,7 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     const byId = Object.fromEntries(TOPICS.map(t => [t.id, t]));
     const ui = { view: 'today', focus: null, tiers: { S: true, A: true, B: false, C: false }, topic: null, tplF: 'all', tplQ: '', status: 'loading' };
     let S = { q: {}, t: {}, tpl: {}, err: [], plan: null, v: 1 };
-    const todayStr = () => new Date().toISOString().slice(0, 10);
+    const todayStr = () => iso(new Date());
     const ORDER = ORDER_NAMES.map(n => TOPICS.find(t => t.name.startsWith(n)));
     let loaded = false, timer = null, dirty = false, dead = false, rand = null;
 
@@ -90,11 +99,11 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     const isDone = t => !!(S.t[t.id] && S.t[t.id].concept) && st(t).pct >= DONE_PCT;
     function planInfo() {
         const start = (S.plan && S.plan.start) || todayStr();
-        const elapsed = Math.max(0, Math.floor((new Date(todayStr()) - new Date(start)) / DAY));
-        const doneN = ORDER.filter(isDone).length, expected = Math.min(ORDER.length, elapsed);
-        return { start, doneN, expected, diff: doneN - expected, next: ORDER.find(t => !isDone(t)) };
+        const dates = planDates(start, ORDER.length), today = todayStr();
+        const expected = dates.filter(d => d < today).length;      // study days already passed
+        const doneN = ORDER.filter(isDone).length;
+        return { start, dates, doneN, expected, diff: doneN - expected, next: ORDER.find(t => !isDone(t)), brk: brk(today) };
     }
-    const dayStr = (start, i) => new Date(new Date(start).getTime() + i * DAY).toISOString().slice(5, 10);
     const paceTxt = P => P.diff > 0 ? `🔥 ${P.diff} ahead` : P.diff < 0 ? `⚠️ ${-P.diff} behind` : '✅ on track';
     const mastery = t => { const s = st(t); return s.pct * (s.acc || 0); };
     const topicLabel = id => (byId[id] ? byId[id].name : '—');
@@ -125,7 +134,7 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
         if (!cur) curHtml = '<div class="ah-card"><h3>🏆 All 31 Tier S + A topics done!</h3><p class="ah-muted">Now Tier B/C, timed mocks and the error log.</p></div>';
         else {
             const s = st(cur), m = S.t[cur.id] || {}, idx = ORDER.indexOf(cur), need = Math.max(0, Math.ceil(DONE_PCT * cur.qs.length) - s.solved);
-            curHtml = `<div class="ah-card ah-focus"><div class="ah-row" style="align-items:center"><span class="ah-tag">${TIER_LABEL[cur.tier]}</span><span class="ah-muted">Day ${idx + 1} of ${ORDER.length} · ${e(dayStr(P.start, idx))}</span>
+            curHtml = `<div class="ah-card ah-focus"><div class="ah-row" style="align-items:center"><span class="ah-tag">${TIER_LABEL[cur.tier]}</span><span class="ah-muted">Day ${idx + 1} of ${ORDER.length} · ${e(P.dates[idx].slice(5))}</span>
 <span style="flex:1"></span>${ui.focus ? '<button class="ah-btn" data-act="auto">↩ Back to plan</button>' : ''}</div>
 <h2 style="margin:6px 0">${e(cur.name)}</h2><div class="ah-muted" style="margin-bottom:12px">avg ${cur.avg} marks/paper · ${cur.papers}/8 papers ${heat(cur.heat)}</div>
 <label class="ah-step"><input type="checkbox" data-act="tt" data-f="concept" data-t="${cur.id}" ${m.concept ? 'checked' : ''}> <b>1️⃣ Concept done</b></label>
@@ -134,7 +143,8 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
 <input class="ah-in" style="width:100%;box-sizing:border-box" data-act="note" data-t="${cur.id}" value="${e(m.note || '')}" maxlength="200" placeholder="📝 one-line logic / trick for this topic">
 <p class="ah-muted" style="margin:10px 0 0">${isDone(cur) ? '✅ Topic done: it moves down the plan automatically.' : `Done when concept ✓ and ${Math.round(DONE_PCT * 100)}% of PYQs solved${need ? ` (${need} more)` : ''}.`}</p></div>`;
         }
-        return `${curHtml}
+        const pause = P.brk ? `<div class="ah-card ah-warn"><h3>📚 ${e(P.brk[2])}</h3><p class="ah-muted">Plan is paused until ${e(planDates(P.brk[1], 2)[1].slice(5))}. Rest, revise lightly, or use the revision list below.</p></div>` : '';
+        return `${pause}${curHtml}
 <div class="ah-grid">
  <div class="ah-card ah-stat"><div class="l">Tier S coverage</div><div class="v">${pct(T.sPct)}</div>${bar(T.sPct)}<div class="ah-muted">16 topics · ~${T.sAll.toFixed(0)} marks/paper</div></div>
  <div class="ah-card ah-stat"><div class="l">PYQs solved</div><div class="v">${T.solved}/${T.bank}</div>${bar(T.solved / T.bank)}</div>
@@ -150,12 +160,12 @@ ${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t)
     function vRoadmap() {
         const P = planInfo();
         const row = (t, i) => { const s = st(t), d = isDone(t), cur = P.next === t;
-            return `<tr class="${cur ? 'ah-cur' : ''}"><td>${i + 1}</td><td>${e(dayStr(P.start, i))}</td><td>${d ? '✅' : s.solved || (S.t[t.id] && S.t[t.id].concept) ? '🔶' : '⬜'}</td>
+            return `<tr class="${cur ? 'ah-cur' : ''}"><td>${i + 1}</td><td>${e(P.dates[i].slice(5))}</td><td>${d ? '✅' : s.solved || (S.t[t.id] && S.t[t.id].concept) ? '🔶' : '⬜'}</td>
 <td><span class="ah-tag">${TIER_LABEL[t.tier]}</span> <b>${e(t.name)}</b></td><td>${t.avg}</td><td style="min-width:110px">${s.solved}/${t.qs.length}${bar(s.pct)}</td>
 <td><button class="ah-btn" data-act="focus" data-t="${t.id}">Focus</button></td></tr>`; };
         return `<div class="ah-card"><div class="ah-row" style="align-items:center"><h3 style="margin:0">🗺️ 31-day plan: all Tier S → Tier A</h3><span style="flex:1"></span><b>${P.doneN}/${ORDER.length} done · ${paceTxt(P)}</b></div>
 <div class="ah-row" style="margin-top:10px;align-items:center"><label class="ah-muted">Plan start <input type="date" class="ah-in" data-act="planstart" value="${e(P.start)}"></label>
-<span class="ah-muted">Ends ${e(dayStr(P.start, ORDER.length - 1))}. Order follows topic dependencies (Regular → CFG → Parsing → SDD …).</span></div></div>
+<span class="ah-muted">Ends ${e(P.dates[ORDER.length - 1].slice(5))}. ${BREAKS.map(b => `${b[2]} (${b[0].slice(5)} → ${b[1].slice(5)}) skipped.`).join(' ')} Order follows topic dependencies.</span></div></div>
 <div class="ah-card ah-scroll"><table class="ah-tbl"><tr><th>#</th><th>Date</th><th></th><th>Topic</th><th>Avg</th><th>PYQs</th><th></th></tr>${ORDER.map(row).join('')}</table></div>`;
     }
 
