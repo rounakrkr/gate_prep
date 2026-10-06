@@ -3,8 +3,15 @@
 // Progress is stored in Firestore: admin/tracker (protected by firestore.rules).
 import { PAPERS, TOPICS, SUBJECTS, TEMPLATES, GA_ROWS, GA_PATTERNS, TRENDS } from './admin-data.js';
 
-const VIEWS = [['overview', '🏠 Overview'], ['today', '🎯 Today'], ['tracker', '📋 Tracker'], ['pyq', '📚 PYQ Index'],
-    ['tpl', '🔁 Templates'], ['err', '🐞 Error Log'], ['insights', '📈 Insights'], ['playbook', '🛣️ Playbook']];
+const VIEWS = [['today', '🎯 Today'], ['roadmap', '🗺️ Roadmap'], ['tracker', '📋 Tracker'], ['pyq', '📚 PYQ Index'],
+    ['tpl', '🔁 Templates'], ['err', '🐞 Error Log'], ['insights', '📈 Insights'], ['playbook', '🛣️ Playbook'], ['overview', '🛠️ Scores & Tools']];
+// Dependency-aware learning order of ALL Tier S (16) + Tier A (15) topics — one topic per day.
+// Chains: Regular → CFG/PDA → Parsing → SDD → Code-opt · Number repr → Cache → Pipelining → Instr. format · Process → Paging → CPU sched → File sys
+const ORDER_NAMES = ['C output tracing', 'Trees, BST', 'Graph algos', 'Graph theory', 'Regular langs', 'CFG, PDA', 'Parsing',
+    'Number repr', 'Boolean algebra', 'Cache', 'Pipelining', 'Process, threads', 'Paging', 'IP addressing', 'Linear algebra', 'Probability',
+    'Syntax-directed', 'Code optimization', 'Decidability', 'Asymptotics', 'Stack & queue', 'CPU scheduling', 'File systems',
+    'Instruction format', 'FDs & normalization', 'Relational algebra', 'Transactions', 'Link performance', 'TCP / HTTP', 'Sets, relations', 'Calculus'];
+const DONE_PCT = 0.8;
 const ERR_TYPES = ['🧠 Concept gap', '🧮 Calculation', '⏱️ Time pressure', '👀 Misread', '🎲 Guess', '⬜ Skipped'];
 const TIER_LABEL = { S: '🔴 S', A: '🟠 A', B: '🟡 B', C: '🟢 C' };
 const DAY = 86400000;
@@ -28,15 +35,23 @@ const CSS = `
 .ah-q.q1{background:rgba(46,204,113,.22);border-color:#2ecc71}.ah-q.q2{background:rgba(229,72,77,.22);border-color:#e5484d}.ah-q small{opacity:.6;margin-left:4px}
 .ah-in,.ah-sel,.ah-txt{background:var(--bg-secondary,#1b1b24);border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:8px 10px;font:inherit;font-size:.85rem}
 .ah-txt{width:100%;min-height:54px;box-sizing:border-box}.ah-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.ah-shell{display:grid;grid-template-columns:215px 1fr;gap:22px;align-items:start}
+.ah-side{position:sticky;top:12px;display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card)}
+.ah-side .ah-btn{border-radius:12px;text-align:left}.ah-brand{font-weight:700;margin-bottom:6px}.ah-spacer{height:10px}
+.ah-hero{display:flex;flex-wrap:wrap;gap:20px;align-items:center;padding:16px;margin-bottom:14px;border-radius:var(--radius);border:1px solid rgba(247,201,72,.35);background:linear-gradient(135deg,rgba(247,201,72,.1),rgba(255,107,53,.06))}
+.ah-big{font-size:2.2rem;font-weight:800;line-height:1}.ah-focus{border-color:rgba(247,201,72,.55)}.ah-step{display:block;margin:10px 0}.ah-cur{background:rgba(247,201,72,.1)}
+@media(max-width:860px){.ah-shell{display:block}.ah-side{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:50;flex-direction:row;overflow-x:auto;border-radius:0;padding:8px;background:var(--bg-secondary)}.ah-side .ah-btn{white-space:nowrap}.ah-brand,.ah-spacer,.ah-save{display:none}.ah-main{padding-bottom:84px}}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
 
-export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml, sprints }) {
+export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml, examDate, onStudentView }) {
     const e = esc || (s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
     const ref = () => doc(db, 'admin', 'tracker');
     const byId = Object.fromEntries(TOPICS.map(t => [t.id, t]));
-    const ui = { view: 'overview', tiers: { S: true, A: true, B: false, C: false }, topic: null, tplF: 'all', tplQ: '', status: 'loading' };
-    let S = { q: {}, t: {}, tpl: {}, err: [], v: 1 };
+    const ui = { view: 'today', focus: null, tiers: { S: true, A: true, B: false, C: false }, topic: null, tplF: 'all', tplQ: '', status: 'loading' };
+    let S = { q: {}, t: {}, tpl: {}, err: [], plan: null, v: 1 };
+    const todayStr = () => new Date().toISOString().slice(0, 10);
+    const ORDER = ORDER_NAMES.map(n => TOPICS.find(t => t.name.startsWith(n)));
     let loaded = false, timer = null, dirty = false, dead = false, rand = null;
 
     // ---------- persistence (never saves before a successful load) ----------
@@ -44,8 +59,9 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
         ui.status = 'loading'; paintStatus();
         try {
             const snap = await getDoc(ref());
-            if (snap.exists()) { const d = snap.data(); S = { q: d.q || {}, t: d.t || {}, tpl: d.tpl || {}, err: d.err || [], v: 1 }; }
+            if (snap.exists()) { const d = snap.data(); S = { q: d.q || {}, t: d.t || {}, tpl: d.tpl || {}, err: d.err || [], plan: d.plan || null, v: 1 }; }
             loaded = true; ui.status = 'saved';
+            if (!S.plan) { S.plan = { start: todayStr() }; save(); }
         } catch (err) { console.error('Hub load error', err); ui.status = 'loaderr'; }
         if (!dead) render();
     }
@@ -71,6 +87,15 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
         const solved = c + w;
         return { c, w, solved, acc: solved ? c / solved : null, pct: solved / t.qs.length };
     }
+    const isDone = t => !!(S.t[t.id] && S.t[t.id].concept) && st(t).pct >= DONE_PCT;
+    function planInfo() {
+        const start = (S.plan && S.plan.start) || todayStr();
+        const elapsed = Math.max(0, Math.floor((new Date(todayStr()) - new Date(start)) / DAY));
+        const doneN = ORDER.filter(isDone).length, expected = Math.min(ORDER.length, elapsed);
+        return { start, doneN, expected, diff: doneN - expected, next: ORDER.find(t => !isDone(t)) };
+    }
+    const dayStr = (start, i) => new Date(new Date(start).getTime() + i * DAY).toISOString().slice(5, 10);
+    const paceTxt = P => P.diff > 0 ? `🔥 ${P.diff} ahead` : P.diff < 0 ? `⚠️ ${-P.diff} behind` : '✅ on track';
     const mastery = t => { const s = st(t); return s.pct * (s.acc || 0); };
     const topicLabel = id => (byId[id] ? byId[id].name : '—');
     function totals() {
@@ -87,27 +112,51 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     // ---------- views ----------
     function vOverview() { return `<div id="ah-overview">${overviewHtml ? overviewHtml() : ''}</div>`; }
 
+    const chipsHtml = t => `<div class="ah-chips">${t.qs.map(q => { const v = S.q[q.k] || 0; return `<button class="ah-q q${v}" data-act="q" data-t="${t.id}" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} ${e(q.l)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div>`;
+
     function vToday() {
-        const T = totals();
-        const rank = TOPICS.filter(t => t.tier === 'S' || t.tier === 'A')
-            .map(t => ({ t, p: t.avg * (1 - mastery(t)) * (S.t[t.id]?.concept ? 1 : 1.1) })).sort((a, b) => b.p - a.p).slice(0, 3);
+        const T = totals(), P = planInfo();
+        const cur = ui.focus ? byId[ui.focus] : P.next;
         const now = Date.now();
-        const due = TOPICS.filter(t => S.t[t.id]?.last && st(t).solved && now - new Date(S.t[t.id].last).getTime() >= 7 * DAY)
+        const upNext = ORDER.filter(t => !isDone(t) && t !== cur).slice(0, 3);
+        const due = TOPICS.filter(t => S.t[t.id] && S.t[t.id].last && st(t).solved && now - new Date(S.t[t.id].last).getTime() >= 7 * DAY)
             .sort((a, b) => new Date(S.t[a.id].last) - new Date(S.t[b.id].last));
-        const compilerGap = sprints && !sprints.some(s => /compiler|pars|lexical|syntax|sdt|sdd/i.test(s.title + ' ' + (s.deliverables || []).join(' ')));
-        return `
+        let curHtml;
+        if (!cur) curHtml = '<div class="ah-card"><h3>🏆 All 31 Tier S + A topics done!</h3><p class="ah-muted">Now Tier B/C, timed mocks and the error log.</p></div>';
+        else {
+            const s = st(cur), m = S.t[cur.id] || {}, idx = ORDER.indexOf(cur), need = Math.max(0, Math.ceil(DONE_PCT * cur.qs.length) - s.solved);
+            curHtml = `<div class="ah-card ah-focus"><div class="ah-row" style="align-items:center"><span class="ah-tag">${TIER_LABEL[cur.tier]}</span><span class="ah-muted">Day ${idx + 1} of ${ORDER.length} · ${e(dayStr(P.start, idx))}</span>
+<span style="flex:1"></span>${ui.focus ? '<button class="ah-btn" data-act="auto">↩ Back to plan</button>' : ''}</div>
+<h2 style="margin:6px 0">${e(cur.name)}</h2><div class="ah-muted" style="margin-bottom:12px">avg ${cur.avg} marks/paper · ${cur.papers}/8 papers ${heat(cur.heat)}</div>
+<label class="ah-step"><input type="checkbox" data-act="tt" data-f="concept" data-t="${cur.id}" ${m.concept ? 'checked' : ''}> <b>1️⃣ Concept done</b></label>
+<div class="ah-step"><b>2️⃣ Solve PYQs</b> <span class="ah-muted">${s.solved}/${cur.qs.length}${s.acc === null ? '' : ' · ' + pct(s.acc) + ' accuracy'} · tap: ⬜ → ✅ → ❌</span>${bar(s.pct)}<div style="margin-top:8px">${chipsHtml(cur)}</div></div>
+<label class="ah-step"><input type="checkbox" data-act="tt" data-f="rev2" data-t="${cur.id}" ${m.rev2 ? 'checked' : ''}> <b>3️⃣ Revised 2×</b></label>
+<input class="ah-in" style="width:100%;box-sizing:border-box" data-act="note" data-t="${cur.id}" value="${e(m.note || '')}" maxlength="200" placeholder="📝 one-line logic / trick for this topic">
+<p class="ah-muted" style="margin:10px 0 0">${isDone(cur) ? '✅ Topic done: it moves down the plan automatically.' : `Done when concept ✓ and ${Math.round(DONE_PCT * 100)}% of PYQs solved${need ? ` (${need} more)` : ''}.`}</p></div>`;
+        }
+        return `${curHtml}
 <div class="ah-grid">
  <div class="ah-card ah-stat"><div class="l">Tier S coverage</div><div class="v">${pct(T.sPct)}</div>${bar(T.sPct)}<div class="ah-muted">16 topics · ~${T.sAll.toFixed(0)} marks/paper</div></div>
  <div class="ah-card ah-stat"><div class="l">PYQs solved</div><div class="v">${T.solved}/${T.bank}</div>${bar(T.solved / T.bank)}</div>
  <div class="ah-card ah-stat"><div class="l">Accuracy</div><div class="v">${T.acc === null ? '–' : pct(T.acc)}</div><div class="ah-muted">correct ÷ attempted</div></div>
- <div class="ah-card ah-stat"><div class="l">Mastery index</div><div class="v">${T.idx.toFixed(1)}/${T.wsum.toFixed(0)}</div><div class="ah-muted">Σ avg-marks × solved% × accuracy. Indicator only, not a prediction.</div></div>
+ <div class="ah-card ah-stat"><div class="l">Mastery index</div><div class="v">${T.idx.toFixed(1)}/${T.wsum.toFixed(0)}</div><div class="ah-muted">Σ avg-marks × solved% × accuracy. Indicator, not a prediction.</div></div>
 </div>
-<div class="ah-card"><h3>🎯 Next best topics (marks × what's left)</h3>
-${rank.map(({ t }) => { const s = st(t); return `<div class="ah-row" style="align-items:center"><span class="ah-tag">${TIER_LABEL[t.tier]}</span><b>${e(t.name)}</b><span class="ah-muted">avg ${t.avg} marks/paper · ${s.solved}/${t.qs.length} solved</span><span class="sp" style="flex:1"></span><button class="ah-btn" data-act="open" data-t="${t.id}">Practice →</button></div>`; }).join('')}</div>
+${upNext.length ? `<div class="ah-card"><h3>⏭️ Up next</h3>${upNext.map(t => `<div class="ah-row" style="align-items:center"><span class="ah-tag">${TIER_LABEL[t.tier]}</span><b>${e(t.name)}</b><span class="ah-muted">Day ${ORDER.indexOf(t) + 1}</span></div>`).join('')}</div>` : ''}
 <div class="ah-card"><h3>🔁 Revision due (7+ days)</h3>
-${due.length ? due.map(t => `<div class="ah-row" style="align-items:center"><b>${e(t.name)}</b><span class="ah-muted">${Math.floor((now - new Date(S.t[t.id].last)) / DAY)} days ago</span><button class="ah-btn" data-act="rand" data-t="${t.id}">🎲 5 random PYQs</button></div>`).join('') : '<p class="ah-muted">Nothing due. Solve some PYQs and this fills up automatically.</p>'}
-${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t))}</b><div class="ah-chips" style="margin-top:8px">${rand.qs.map(q => `<span class="ah-q">${e(q.l)}</span>`).join('')}</div></div>` : ''}</div>
-${compilerGap ? `<div class="ah-card ah-warn"><h3>⚠️ Compiler Design gap</h3><p class="ah-muted">Data says Compiler Design is ~6.4 marks/paper (Parsing is Tier S, 18 marks over 8 papers) but no sprint in your plan mentions it. Add one around the Tier S sprints.</p></div>` : ''}`;
+${due.length ? due.map(t => `<div class="ah-row" style="align-items:center"><b>${e(t.name)}</b><span class="ah-muted">${Math.floor((now - new Date(S.t[t.id].last)) / DAY)} days ago</span><button class="ah-btn" data-act="rand" data-t="${t.id}">🎲 5 random PYQs</button></div>`).join('') : '<p class="ah-muted">Nothing due yet. It fills up as you solve PYQs.</p>'}
+${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t))}</b><div class="ah-chips" style="margin-top:8px">${rand.qs.map(q => `<span class="ah-q">${e(q.l)}</span>`).join('')}</div></div>` : ''}</div>`;
+    }
+
+    function vRoadmap() {
+        const P = planInfo();
+        const row = (t, i) => { const s = st(t), d = isDone(t), cur = P.next === t;
+            return `<tr class="${cur ? 'ah-cur' : ''}"><td>${i + 1}</td><td>${e(dayStr(P.start, i))}</td><td>${d ? '✅' : s.solved || (S.t[t.id] && S.t[t.id].concept) ? '🔶' : '⬜'}</td>
+<td><span class="ah-tag">${TIER_LABEL[t.tier]}</span> <b>${e(t.name)}</b></td><td>${t.avg}</td><td style="min-width:110px">${s.solved}/${t.qs.length}${bar(s.pct)}</td>
+<td><button class="ah-btn" data-act="focus" data-t="${t.id}">Focus</button></td></tr>`; };
+        return `<div class="ah-card"><div class="ah-row" style="align-items:center"><h3 style="margin:0">🗺️ 31-day plan: all Tier S → Tier A</h3><span style="flex:1"></span><b>${P.doneN}/${ORDER.length} done · ${paceTxt(P)}</b></div>
+<div class="ah-row" style="margin-top:10px;align-items:center"><label class="ah-muted">Plan start <input type="date" class="ah-in" data-act="planstart" value="${e(P.start)}"></label>
+<span class="ah-muted">Ends ${e(dayStr(P.start, ORDER.length - 1))}. Order follows topic dependencies (Regular → CFG → Parsing → SDD …).</span></div></div>
+<div class="ah-card ah-scroll"><table class="ah-tbl"><tr><th>#</th><th>Date</th><th></th><th>Topic</th><th>Avg</th><th>PYQs</th><th></th></tr>${ORDER.map(row).join('')}</table></div>`;
     }
 
     function vTracker() {
@@ -199,7 +248,7 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
             'Keep the error log: it is the cheapest way to move your score up.'])}</div>`;
     }
 
-    const RENDER = { overview: vOverview, today: vToday, tracker: vTracker, pyq: vPyq, tpl: vTpl, err: vErr, insights: vInsights, playbook: vPlaybook };
+    const RENDER = { overview: vOverview, today: vToday, roadmap: vRoadmap, tracker: vTracker, pyq: vPyq, tpl: vTpl, err: vErr, insights: vInsights, playbook: vPlaybook };
     const STATUS = { loading: '⏳ Loading…', saved: '💾 Saved', saving: '⏳ Saving…', saveerr: '⚠️ Save failed — will retry on next change', loaderr: '⚠️ Could not load tracker' };
     function paintStatus() { const el = root.querySelector('#ah-status'); if (el) el.textContent = STATUS[ui.status] || ''; }
 
@@ -210,9 +259,12 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
         if (needsData && ui.status === 'loaderr') body = `<div class="ah-card ah-warn"><p>Could not load your tracker from Firestore. Saving is disabled so existing data is never overwritten. Check the Firestore rules and your login.</p><button class="ah-btn on" data-act="retry">Retry</button></div>`;
         else if (needsData && !loaded) body = '<p class="ah-muted">Loading…</p>';
         else body = RENDER[ui.view]();
-        root.innerHTML = `<div class="section-header"><h2>👑 Admin Hub</h2><div class="line"></div></div>
-<div class="ah-bar">${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" data-act="view" data-k="${k}">${l}</button>`).join('')}<span class="sp"></span><span class="ah-save" id="ah-status"></span></div>
-<div id="ah-view">${body}</div>`;
+        const P = planInfo(), days = examDate ? Math.max(0, Math.ceil((examDate - Date.now()) / DAY)) : null;
+        root.innerHTML = `<div class="ah-shell"><nav class="ah-side"><div class="ah-brand">👑 Command Center</div>
+${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" data-act="view" data-k="${k}">${l}</button>`).join('')}
+<span class="ah-spacer"></span><button class="ah-btn" data-act="student">👁️ Student view</button><span class="ah-save" id="ah-status"></span></nav>
+<main class="ah-main">${loaded ? `<div class="ah-hero"><div><div class="ah-big">${days === null ? '—' : days}</div><div class="ah-muted">days to GATE</div></div>
+<div style="flex:1;min-width:180px"><b>${P.doneN}/${ORDER.length}</b> Tier S+A topics · ${paceTxt(P)}${bar(P.doneN / ORDER.length)}</div></div>` : ''}<div id="ah-view">${body}</div></main></div>`;
         paintStatus();
     }
 
@@ -223,6 +275,9 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
         const a = b.dataset.act;
         if (a === 'view') { ui.view = b.dataset.k; render(); }
         else if (a === 'retry') load();
+        else if (a === 'student') { if (onStudentView) onStudentView(); }
+        else if (a === 'focus') { ui.focus = b.dataset.t; ui.view = 'today'; render(); }
+        else if (a === 'auto') { ui.focus = null; render(); }
         else if (a === 'open') { ev.preventDefault(); ui.topic = b.dataset.t; ui.view = 'pyq'; render(); }
         else if (a === 'tier') { ui.tiers[b.dataset.k] = !ui.tiers[b.dataset.k]; render(); }
         else if (a === 'tplf') { ui.tplF = b.dataset.k; render(); }
@@ -232,7 +287,7 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
         } else if (a === 'q') {
             const k = b.dataset.k, v = ((S.q[k] || 0) + 1) % 3;
             if (v) S.q[k] = v; else delete S.q[k];
-            touch(ui.topic); save(); render();
+            touch(b.dataset.t || ui.topic); save(); render();
         } else if (a === 'clear') {
             const t = byId[b.dataset.t];
             if (confirm(`Reset all PYQ marks for "${t.name}"?`)) { t.qs.forEach(q => delete S.q[q.k]); save(); render(); }
@@ -247,7 +302,8 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
     function onChange(ev) {
         const x = ev.target, a = x.dataset && x.dataset.act; if (!a) return;
         if (a === 'pick') { ui.topic = x.value; render(); }
-        else if (a === 'tt') { (S.t[x.dataset.t] = S.t[x.dataset.t] || {})[x.dataset.f] = x.checked; save(); }
+        else if (a === 'tt') { (S.t[x.dataset.t] = S.t[x.dataset.t] || {})[x.dataset.f] = x.checked; save(); render(); }
+        else if (a === 'planstart') { if (x.value) { S.plan = { start: x.value }; save(); render(); } }
         else if (a === 'note') { (S.t[x.dataset.t] = S.t[x.dataset.t] || {}).note = x.value.slice(0, 200); save(); }
         else if (a === 'tpl') { if (x.checked) S.tpl[x.dataset.k] = true; else delete S.tpl[x.dataset.k]; save(); }
         else if (a === 'errretry') { const r = S.err.find(r => r.id === x.dataset.id); if (r) { r.retry = x.checked; save(); } }

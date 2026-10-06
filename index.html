@@ -565,6 +565,15 @@
         /* ===== ADMIN MODE (only injected for admin account) ===== */
         .logo .badge.admin-pill { background: linear-gradient(135deg, #ffd700, #ff6b35); }
         .nav-tab.admin-tab { border-color: rgba(247,201,72,0.45); }
+        /* ===== ADMIN: whole-site mode ===== */
+        body.admin-mode:not(.student-view) { --bg-primary: #07070d; --bg-secondary: #12121c; background: radial-gradient(1200px 500px at 85% -10%, rgba(247,201,72,0.08), transparent), var(--bg-primary); }
+        body.admin-mode:not(.student-view) .countdown-section, body.admin-mode:not(.student-view) .stats-grid,
+        body.admin-mode:not(.student-view) .nav-tabs, body.admin-mode:not(.student-view) footer,
+        body.admin-mode:not(.student-view) header .subtitle { display: none !important; }
+        body.admin-mode:not(.student-view) .tab-content:not(#tab-admin) { display: none !important; }
+        body.admin-mode:not(.student-view) #tab-admin { display: block !important; }
+        #admin-back { display: none; position: fixed; right: 16px; bottom: 16px; z-index: 999; padding: 12px 18px; border: 0; border-radius: 999px; font-weight: 700; cursor: pointer; color: #111; background: var(--accent-gradient); box-shadow: var(--shadow); }
+        body.student-view #admin-back { display: block; }
         .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
         .admin-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
         .admin-card .label { color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.6px; }
@@ -945,6 +954,7 @@
             }
             document.querySelectorAll('[data-admin-only]').forEach(el => el.remove());
             isAdmin = false;
+            document.body.classList.remove('admin-mode', 'student-view');
             if (adminHub) { adminHub.destroy(); adminHub = null; }
             adminPyq = undefined;
             adminPyqError = null;
@@ -952,6 +962,11 @@
         }
 
         let adminHub = null;
+
+        function toggleStudentView() {
+            const on = document.body.classList.toggle('student-view');
+            switchTab(on ? 'dashboard' : 'admin');
+        }
 
         function renderAdminPanel() {
             const el = document.getElementById('tab-admin');
@@ -965,10 +980,11 @@
                 const mod = await import('./admin-hub.js');
                 const root = document.getElementById('tab-admin');
                 if (!isAdmin || !root) return;
-                adminHub = mod.createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml: adminOverviewHtml, sprints: SPRINTS });
+                adminHub = mod.createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtml: adminOverviewHtml, examDate: GATE_DATE, onStudentView: toggleStudentView });
                 adminHub.mount();
             } catch (err) {
                 console.error('Admin hub failed to load', err);
+                document.body.classList.remove('admin-mode');   // never leave the admin stranded in an empty shell
             }
         }
 
@@ -997,9 +1013,18 @@
             sec.setAttribute('data-admin-only', '');
             document.querySelector('footer').before(sec);
 
+            document.body.classList.add('admin-mode');
+            const back = document.createElement('button');
+            back.id = 'admin-back';
+            back.setAttribute('data-admin-only', '');
+            back.textContent = '👑 Back to Admin';
+            back.onclick = toggleStudentView;
+            document.body.appendChild(back);
+
             renderAdminPanel();
             loadAdminPyq();
             loadAdminHub();
+            switchTab('admin');
         }
 
         async function loadAdminPyq() {

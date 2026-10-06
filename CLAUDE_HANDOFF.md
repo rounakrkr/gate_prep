@@ -96,22 +96,26 @@ Both scores verified directly from official answer key PDFs using Python:
 - `admin/tracker` → hub state: `{q:{<qkey>:1|2}, t:{<topicId>:{concept,rev2,note,last}}, tpl:{<id>:true}, err:[{id,date,paper,topic,type,logic,retry}], v:1}`. `qkey` like `24S1Q43`; 1=correct, 2=wrong. Topic ids look like `s_graph_algos_bfs_dfs_mst_short`
 
 ### ✅ Done
-Admin mode (badge, gate, rules), Admin Hub v1 (pushed, 24/24 jsdom tests pass), sprint-count/timer/XSS/sync-toast fixes, README security section.
+Admin mode (badge, gate, rules), Admin Hub v1 + full-site admin redesign (35/35 jsdom tests pass), sprint-count/timer/XSS/sync-toast fixes, README security section.
 
 ### 🧭 User decisions (do not re-ask)
 - Goal = **complete ALL Tier S (16) + Tier A (15) topics**, regardless of subject. Subject-wise thinking no longer matters to him.
 - **Compiler Design is IN** (it overlaps TOC/AFL: ~59% of CD marks are Parsing/SDD/Lexical). `SPRINTS` still has NO compiler sprint → either add 2 sprints after TOC Part 3 (S22) or rely on the topic plan below.
 - S16 file is preferred over the older analysis.
 
-## 🎯 NEXT TASK (IN PROGRESS): full-site redesign for admin
+## ✅ Admin full-site redesign — DONE (6 Oct 2026, 35/35 jsdom tests)
 
-User wants the **entire website to look/work differently for the admin**, not just an Admin tab. Spec:
-1. In admin mode hide the student shell (nav tabs except admin, other `.tab-content`, footer) via `body.admin-mode` CSS; keep logo + profile/logout. Provide a **"👁️ Student view"** toggle to see the normal site.
-2. **Topic-first, not subject-first.** Default view = **Roadmap/Today**: an ordered path of the 31 S+A topics (dependency-aware: Regular langs → CFG/PDA → Parsing → SDD → Code-opt; Number repr → Cache → Pipelining → Instr format; Process → Paging → CPU sched → File sys …), 1 topic/day (31 days from plan start, stored in `admin/tracker.plan.start`), ahead/behind indicator.
-3. Today = current topic checklist with **inline PYQ chips** (concept ✓ → solve PYQs → logic one-liner → rev). Topic "done" = concept ✓ and ≥80% of its PYQ bank solved.
-4. Keep Tracker, Templates, Error Log (ROI ranker), Insights, Playbook, Overview (PYQ JSON + backup).
-5. Distinct admin look (own palette/sidebar on desktop, bottom nav on mobile).
-6. Remove the now-obsolete "Compiler gap" warning in Today once the plan includes Compiler topics.
+When `isAdmin`, `setupAdminMode()` adds `body.admin-mode`: the student shell (countdown, stats, nav tabs, footer, other tabs) is hidden by CSS and the user lands on `#tab-admin`, which the hub renders as a **sidebar Command Center** (bottom nav on mobile). `👁️ Student view` (sidebar) toggles `body.student-view`; a floating `#admin-back` button returns. If `admin-hub.js` fails to import, `admin-mode` is removed so the admin is never stranded.
+
+- **Topic-first plan:** `ORDER_NAMES` in `admin-hub.js` = all 31 Tier S+A topics in dependency order (Regular → CFG/PDA → Parsing → SDD → Code-opt; Number repr → Cache → Pipelining → Instr fmt; Process → Paging → CPU sched → File sys …), 1 topic/day from `admin/tracker.plan.start` (editable on Roadmap), ahead/behind indicator.
+- **Topic done** = concept ✓ AND ≥80% (`DONE_PCT`) of its PYQ bank solved → plan auto-advances.
+- **Views:** 🎯 Today (current topic checklist + inline PYQ chips, up-next, revision due) · 🗺️ Roadmap · 📋 Tracker · 📚 PYQ Index · 🔁 Templates · 🐞 Error Log (ROI ranker) · 📈 Insights · 🛣️ Playbook · 🛠️ Scores & Tools (old overview: PYQ JSON, backup).
+- Compiler Design is now inside the plan (Parsing, SDD, Code-opt), so no `SPRINTS` change was needed.
+
+## 🎯 NEXT IDEAS (not started)
+- Add CD sprints to student `SPRINTS` only if the user wants the student view to match.
+- After S+A is done: Tier B/C ordering, timed-mock tracker in the hub, per-topic "logic one-liner" export.
+- Visual check on a real phone after Vercel deploy (only jsdom-tested so far).
 
 ## ⚠️ Known caveats
 - `mocks/*.pdf` missing from repo → mock download buttons 404.
