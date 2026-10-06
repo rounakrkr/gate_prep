@@ -48,6 +48,10 @@ const CSS = `
 .ah-side{position:sticky;top:12px;display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card)}
 .ah-side .ah-btn{border-radius:12px;text-align:left}.ah-brand{font-weight:700;margin-bottom:6px}.ah-spacer{height:10px}
 .ah-hero{display:flex;flex-wrap:wrap;gap:20px;align-items:center;padding:20px;margin-bottom:20px;border-radius:var(--radius);border:1px solid rgba(247,201,72,.35);background:linear-gradient(135deg,rgba(247,201,72,.1),rgba(255,107,53,.06))}
+.ah-hero{gap:18px 32px;padding:26px 30px}.ah-hero-prog{flex:1;min-width:240px}.ah-hero-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+.ah-hero-num{font-size:2rem;font-weight:800;line-height:1.1}.ah-hero-num .ah-muted{font-size:1.4rem;font-weight:600;margin-left:2px}.ah-hero-lbl{font-size:1.1rem;color:var(--text-secondary)}
+.ah-pace{padding:5px 14px;border-radius:999px;font-size:.88rem;font-weight:600;border:1px solid;text-transform:capitalize;white-space:nowrap}.ah-pace.ok{color:#4ecdc4;border-color:rgba(78,205,196,.5);background:rgba(78,205,196,.1)}.ah-pace.up{color:#2ecc71;border-color:rgba(46,204,113,.5);background:rgba(46,204,113,.1)}.ah-pace.down{color:#ffb347;border-color:rgba(255,179,71,.55);background:rgba(255,179,71,.1)}
+.ah-hero-prog .ah-prog{height:10px;border-radius:6px;margin-top:18px}
 .ah-big{font-size:2.2rem;font-weight:800;line-height:1}.ah-focus{border-color:rgba(247,201,72,.55)}.ah-focus{padding:30px}.ah-focus h2{margin:10px 0 8px;line-height:1.3}
 .ah-step{display:block;margin:18px 0;padding:18px 20px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.025)}
 label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
@@ -328,8 +332,8 @@ ${GA_ROWS.map(r => `<tr><td>${e(r.type)}</td>${r.marks.map(v => `<td style="text
         root.innerHTML = `<div class="ah-shell"><nav class="ah-side"><div class="ah-brand">👑 Command Center</div>
 ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" data-act="view" data-k="${k}">${l}</button>`).join('')}
 <span class="ah-spacer"></span><button class="ah-btn" data-act="student">👁️ Student view</button><span class="ah-save" id="ah-status"></span></nav>
-<main class="ah-main">${loaded ? `<div class="ah-hero"><div><div class="ah-big">${days === null ? '—' : days}</div><div class="ah-muted">days to GATE</div></div>
-<div style="flex:1;min-width:180px"><b>${P.doneN}/${ORDER.length}</b> Tier S+A topics · ${paceTxt(P)}${bar(P.doneN / ORDER.length)}</div></div>` : ''}<div id="ah-view">${body}</div></main></div>`;
+<main class="ah-main">${loaded ? `<div class="ah-hero"><div class="ah-hero-days"><div class="ah-big">${days === null ? '—' : days}</div><div class="ah-muted">days to GATE</div></div>
+<div class="ah-hero-prog"><div class="ah-hero-row"><span class="ah-hero-num"><b>${P.doneN}</b><span class="ah-muted">/${ORDER.length}</span></span><span class="ah-hero-lbl">Tier S+A topics done</span><span class="ah-pace ${P.diff > 0 ? 'up' : P.diff < 0 ? 'down' : 'ok'}">${paceTxt(P)}</span></div>${bar(P.doneN / ORDER.length)}</div></div>` : ''}<div id="ah-view">${body}</div></main></div>`;
         // keep the phone nav slider where it was (the whole nav is rebuilt on each render), and keep the active tab in view
         const side = root.querySelector('.ah-side');
         if (side) {
