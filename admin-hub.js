@@ -85,7 +85,8 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 @media(max-width:520px){.ah-trk th:nth-child(7),.ah-trk td:nth-child(7){display:none}}
 .ah-trk tbody tr:hover,.ah-trk tr:hover td{background:rgba(255,255,255,.02)}
 .ah-finish{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:22px}.ah-finish .ah-btn{padding:12px 22px;font-weight:600}
-.ah-btn:disabled{opacity:.45;cursor:not-allowed}
+.ah-fin{transition:all .2s}.ah-fin.locked{opacity:.45;filter:grayscale(.9)}.ah-fin.locked .h{display:none}
+.ah-fin.locked:hover{opacity:1;filter:none;border:1px dashed #f7c948;color:#f7c948;transform:translateY(-1px)}.ah-fin.locked:hover .i{display:none}.ah-fin.locked:hover .h{display:inline}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
 
@@ -184,7 +185,8 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
         let curHtml;
         if (!cur) curHtml = '<div class="ah-card"><h3>🏆 All 31 Tier S + A topics done!</h3><p class="ah-muted">Now Tier B/C, timed mocks and the error log.</p></div>';
         else {
-            const s = st(cur), m = S.t[cur.id] || {}, idx = ORDER.indexOf(cur), need = Math.max(0, Math.ceil(DONE_PCT * cur.qs.length) - s.solved);
+            const s = st(cur), m = S.t[cur.id] || {}, idx = ORDER.indexOf(cur), need = Math.max(0, Math.ceil(DONE_PCT * cur.qs.length) - s.solved),
+                rd = isReady(cur), why = [m.concept ? '' : 'concept not ticked', need ? `${need} more PYQs for ${Math.round(DONE_PCT * 100)}%` : ''].filter(Boolean).join(' + ');
             curHtml = `<div class="ah-card ah-focus"><div class="ah-row" style="align-items:center"><span class="ah-tag">${TIER_LABEL[cur.tier]}</span><span class="ah-muted">Day ${idx + 1} of ${ORDER.length} · ${e(P.dates[idx].slice(5))}</span>
 <span style="flex:1"></span>${ui.focus ? '<button class="ah-btn" data-act="auto">↩ Back to plan</button>' : ''}</div>
 <h2 style="margin:6px 0">${e(cur.name)}</h2><div class="ah-muted" style="margin-bottom:12px">avg ${cur.avg} marks/paper · ${cur.papers}/8 papers ${heat(cur.heat)}</div>
@@ -194,8 +196,8 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
 <input class="ah-in" style="width:100%;box-sizing:border-box" data-act="note" data-t="${cur.id}" value="${e(m.note || '')}" maxlength="200" placeholder="📝 one-line logic / trick for this topic">
 ${isDone(cur)
  ? `<div class="ah-finish"><span class="ah-muted">✅ Finished on ${e(S.t[cur.id].done.slice(5))}</span><button class="ah-btn" data-act="reopen" data-t="${cur.id}">↩ Reopen</button></div>`
- : `<div class="ah-finish"><button class="ah-btn ${isReady(cur) ? 'on' : ''}" data-act="finish" data-t="${cur.id}" ${isReady(cur) ? '' : 'disabled'}>${isReady(cur) ? '✅ Finish topic → next' : '🔒 Finish topic'}</button>
-<span class="ah-muted">${isReady(cur) ? 'Ready. You decide when to move on.' : `Unlocks after: ${[m.concept ? '' : 'concept ✓', need ? `${need} more PYQs` : ''].filter(Boolean).join(' + ')}`}</span></div>`}</div>`;
+ : `<div class="ah-finish"><button class="ah-btn ah-fin ${rd ? 'on' : 'locked'}" data-act="finish" data-t="${cur.id}" title="${e(rd ? 'Ready to finish' : 'Not ready: ' + why + ' (click to finish anyway)')}">${rd ? '✅ Finish topic → next' : '<span class="i">🔒 Finish topic</span><span class="h">⚠️ Finish anyway?</span>'}</button>
+<span class="ah-muted">${rd ? 'Ready. You decide when to move on.' : `Not ready: ${e(why)}. You can still finish early; it will ask you to confirm.`}</span></div>`}</div>`;
         }
         const pause = P.brk ? `<div class="ah-card ah-warn"><h3>📚 ${e(P.brk[2])}</h3><p class="ah-muted">Plan is paused until ${e(planDates(P.brk[1], 2)[1].slice(5))}. Rest, revise lightly, or use the revision list below.</p></div>` : '';
         return `${pause}${curHtml}
@@ -370,7 +372,9 @@ ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" dat
         else if (a === 'paper') { if (onOpenPaper) onOpenPaper(Number(b.dataset.id)); }
         else if (a === 'student') { if (onStudentView) onStudentView(); }
         else if (a === 'focus') { ui.focus = b.dataset.t; ui.view = 'today'; render(); }
-        else if (a === 'finish') { const t = byId[b.dataset.t]; if (!t || !isReady(t)) return; (S.t[t.id] = S.t[t.id] || {}).done = todayStr(); ui.focus = null; save(); render(); }
+        else if (a === 'finish') { const t = byId[b.dataset.t]; if (!t) return;
+            if (!isReady(t)) { const sx = st(t); if (!confirm(`Only ${sx.solved}/${t.qs.length} PYQs solved${S.t[t.id] && S.t[t.id].concept ? '' : ' and concept not ticked'}.\nFinish "${t.name}" anyway?`)) return; }
+            (S.t[t.id] = S.t[t.id] || {}).done = todayStr(); ui.focus = null; save(); render(); }
         else if (a === 'reopen') { const m = S.t[b.dataset.t]; if (m) delete m.done; save(); render(); }
         else if (a === 'auto') { ui.focus = null; render(); }
         else if (a === 'open') { ev.preventDefault(); ui.topic = b.dataset.t; ui.view = 'pyq'; render(); }
