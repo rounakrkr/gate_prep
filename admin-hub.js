@@ -84,6 +84,8 @@ label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 @media(max-width:760px){.ah-trk th:nth-child(6),.ah-trk td:nth-child(6){display:none}.ah-trk{font-size:.8rem}.ah-trk th,.ah-trk td{padding:8px 4px}.ah-trk td:nth-child(5){min-width:70px!important}.ah-trk td:last-child .ah-in{min-width:90px;width:100%;padding:8px}.ah-trk .ah-topic{min-width:105px}}
 @media(max-width:520px){.ah-trk th:nth-child(7),.ah-trk td:nth-child(7){display:none}}
 .ah-trk tbody tr:hover,.ah-trk tr:hover td{background:rgba(255,255,255,.02)}
+.ah-finish{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:22px}.ah-finish .ah-btn{padding:12px 22px;font-weight:600}
+.ah-btn:disabled{opacity:.45;cursor:not-allowed}
 .ah-pos{color:#2ecc71}.ah-neg{color:#e5484d}.ah-tag{font-size:.7rem;padding:2px 7px;border-radius:999px;border:1px solid var(--border)}
 `;
 
@@ -92,7 +94,7 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     const ref = () => doc(db, 'admin', 'tracker');
     const byId = Object.fromEntries(TOPICS.map(t => [t.id, t]));
     const ui = { view: 'today', focus: null, tiers: { S: true, A: true, B: false, C: false }, topic: null, tplF: 'all', tplQ: '', status: 'loading' };
-    let S = { q: {}, t: {}, tpl: {}, err: [], plan: null, v: 1 };
+    let S = { q: {}, t: {}, tpl: {}, err: [], plan: null, v: 2 };
     const todayStr = () => iso(new Date());
     const ORDER = ORDER_NAMES.map(n => TOPICS.find(t => t.name.startsWith(n)));
     let loaded = false, timer = null, dirty = false, dead = false, rand = null;
@@ -100,10 +102,17 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     // ---------- persistence (never saves before a successful load) ----------
     async function load() {
         ui.status = 'loading'; paintStatus();
+        let migrated = false;
         try {
             const snap = await getDoc(ref());
-            if (snap.exists()) { const d = snap.data(); S = { q: d.q || {}, t: d.t || {}, tpl: d.tpl || {}, err: d.err || [], plan: d.plan || null, v: 1 }; }
+            if (snap.exists()) { const d = snap.data(); S = { q: d.q || {}, t: d.t || {}, tpl: d.tpl || {}, err: d.err || [], plan: d.plan || null, v: d.v || 1 };
+                if (S.v < 2) {   // v1 auto-finished topics at concept ✓ + 80%; keep those finished
+                    TOPICS.forEach(t => { if (isReady(t)) S.t[t.id].done = (S.t[t.id].last || new Date().toISOString()).slice(0, 10); });
+                    S.v = 2; migrated = true;
+                }
+            }
             loaded = true; ui.status = 'saved';
+            if (migrated) save();
             if (!S.plan) { S.plan = { start: todayStr() }; save(); }
         } catch (err) { console.error('Hub load error', err); ui.status = 'loaderr'; }
         if (!dead) render();
@@ -130,7 +139,9 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
         const solved = c + w;
         return { c, w, solved, acc: solved ? c / solved : null, pct: solved / t.qs.length };
     }
-    const isDone = t => !!(S.t[t.id] && S.t[t.id].concept) && st(t).pct >= DONE_PCT;
+    // ready = unlocks the Finish button; done = the user pressed Finish (explicit, stored as a date)
+    const isReady = t => !!(S.t[t.id] && S.t[t.id].concept) && st(t).pct >= DONE_PCT;
+    const isDone = t => !!(S.t[t.id] && S.t[t.id].done);
     function planInfo() {
         const start = (S.plan && S.plan.start) || todayStr();
         const dates = planDates(start, ORDER.length), today = todayStr();
@@ -181,7 +192,10 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
 <div class="ah-step"><b>2️⃣ Solve PYQs</b> <span class="ah-muted">${s.solved}/${cur.qs.length}${s.acc === null ? '' : ' · ' + pct(s.acc) + ' accuracy'} · tap: ⬜ → ✅ → ❌</span>${bar(s.pct)}<div style="margin-top:8px">${chipsHtml(cur)}</div></div>
 <label class="ah-step"><input type="checkbox" data-act="tt" data-f="rev2" data-t="${cur.id}" ${m.rev2 ? 'checked' : ''}> <b>3️⃣ Revised 2×</b></label>
 <input class="ah-in" style="width:100%;box-sizing:border-box" data-act="note" data-t="${cur.id}" value="${e(m.note || '')}" maxlength="200" placeholder="📝 one-line logic / trick for this topic">
-<p class="ah-muted" style="margin:10px 0 0">${isDone(cur) ? '✅ Topic done: it moves down the plan automatically.' : `Done when concept ✓ and ${Math.round(DONE_PCT * 100)}% of PYQs solved${need ? ` (${need} more)` : ''}.`}</p></div>`;
+${isDone(cur)
+ ? `<div class="ah-finish"><span class="ah-muted">✅ Finished on ${e(S.t[cur.id].done.slice(5))}</span><button class="ah-btn" data-act="reopen" data-t="${cur.id}">↩ Reopen</button></div>`
+ : `<div class="ah-finish"><button class="ah-btn ${isReady(cur) ? 'on' : ''}" data-act="finish" data-t="${cur.id}" ${isReady(cur) ? '' : 'disabled'}>${isReady(cur) ? '✅ Finish topic → next' : '🔒 Finish topic'}</button>
+<span class="ah-muted">${isReady(cur) ? 'Ready. You decide when to move on.' : `Unlocks after: ${[m.concept ? '' : 'concept ✓', need ? `${need} more PYQs` : ''].filter(Boolean).join(' + ')}`}</span></div>`}</div>`;
         }
         const pause = P.brk ? `<div class="ah-card ah-warn"><h3>📚 ${e(P.brk[2])}</h3><p class="ah-muted">Plan is paused until ${e(planDates(P.brk[1], 2)[1].slice(5))}. Rest, revise lightly, or use the revision list below.</p></div>` : '';
         return `${pause}${curHtml}
@@ -200,12 +214,12 @@ ${rand ? `<div class="ah-card" style="margin:10px 0 0"><b>${e(topicLabel(rand.t)
     function vRoadmap() {
         const P = planInfo();
         const row = (t, i) => { const s = st(t), d = isDone(t), cur = P.next === t;
-            return `<tr class="${cur ? 'ah-cur' : ''}"><td>${i + 1}</td><td>${e(P.dates[i].slice(5))}</td><td>${d ? '✅' : s.solved || (S.t[t.id] && S.t[t.id].concept) ? '🔶' : '⬜'}</td>
+            return `<tr class="${cur ? 'ah-cur' : ''}"><td>${i + 1}</td><td>${e(P.dates[i].slice(5))}</td><td>${d ? '✅' : isReady(t) ? '🟢' : s.solved || (S.t[t.id] && S.t[t.id].concept) ? '🔶' : '⬜'}</td>
 <td><span class="ah-tag">${TIER_LABEL[t.tier]}</span> <b>${e(t.name)}</b></td><td>${t.avg}</td><td style="min-width:110px">${s.solved}/${t.qs.length}${bar(s.pct)}</td>
 <td><button class="ah-btn" data-act="focus" data-t="${t.id}">Focus</button></td></tr>`; };
         return `<div class="ah-card"><div class="ah-row" style="align-items:center"><h3 style="margin:0">🗺️ 31-day plan: all Tier S → Tier A</h3><span style="flex:1"></span><b>${P.doneN}/${ORDER.length} done · ${paceTxt(P)}</b></div>
 <div class="ah-row" style="margin-top:10px;align-items:center"><label class="ah-muted">Plan start <input type="date" class="ah-in" data-act="planstart" value="${e(P.start)}"></label>
-<span class="ah-muted">Ends ${e(P.dates[ORDER.length - 1].slice(5))}. ${BREAKS.map(b => `${b[2]} (${b[0].slice(5)} → ${b[1].slice(5)}) skipped.`).join(' ')} Order follows topic dependencies.</span></div></div>
+<span class="ah-muted">✅ finished · 🟢 ready to finish · 🔶 in progress. Ends ${e(P.dates[ORDER.length - 1].slice(5))}. ${BREAKS.map(b => `${b[2]} (${b[0].slice(5)} → ${b[1].slice(5)}) skipped.`).join(' ')} Order follows topic dependencies.</span></div></div>
 <div class="ah-card ah-scroll"><table class="ah-tbl"><tr><th>#</th><th>Date</th><th></th><th>Topic</th><th>Avg</th><th>PYQs</th><th></th></tr>${ORDER.map(row).join('')}</table></div>`;
     }
 
@@ -356,6 +370,8 @@ ${VIEWS.map(([k, l]) => `<button class="ah-btn ${ui.view === k ? 'on' : ''}" dat
         else if (a === 'paper') { if (onOpenPaper) onOpenPaper(Number(b.dataset.id)); }
         else if (a === 'student') { if (onStudentView) onStudentView(); }
         else if (a === 'focus') { ui.focus = b.dataset.t; ui.view = 'today'; render(); }
+        else if (a === 'finish') { const t = byId[b.dataset.t]; if (!t || !isReady(t)) return; (S.t[t.id] = S.t[t.id] || {}).done = todayStr(); ui.focus = null; save(); render(); }
+        else if (a === 'reopen') { const m = S.t[b.dataset.t]; if (m) delete m.done; save(); render(); }
         else if (a === 'auto') { ui.focus = null; render(); }
         else if (a === 'open') { ev.preventDefault(); ui.topic = b.dataset.t; ui.view = 'pyq'; render(); }
         else if (a === 'tier') { ui.tiers[b.dataset.k] = !ui.tiers[b.dataset.k]; render(); }
