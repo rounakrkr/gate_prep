@@ -57,10 +57,12 @@ const CSS = `
 label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-step input[type=checkbox],.ah-tbl input[type=checkbox]{width:19px;height:19px;accent-color:#f7c948;cursor:pointer}
 .ah-step .ah-prog{margin:12px 0 16px}.ah-qrow{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.ah-qrow:last-child{margin-bottom:0}
-.ah-qp{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:78px;padding-top:8px;font-size:.78rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
-.ah-open{font:inherit;font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid rgba(247,201,72,.45);background:rgba(247,201,72,.08);color:#f7c948;cursor:pointer;transition:all .15s}.ah-open:hover{background:#f7c948;color:#111}
+.ah-qrow{align-items:center}
+.ah-qp{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:10px;width:150px;flex-shrink:0;font-size:.8rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.ah-open{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;font-size:.85rem;line-height:1;border-radius:50%;border:1px solid rgba(247,201,72,.4);background:rgba(247,201,72,.08);color:#f7c948;cursor:pointer;transition:all .15s}
+.ah-open:hover{background:#f7c948;color:#111;transform:scale(1.1)}
 .ah-focus .ah-in{margin-top:6px;padding:14px 16px}.ah-focus>p{margin-top:18px!important}.ah-cur{background:rgba(247,201,72,.1)}
-@media(max-width:560px){.ah-card{padding:16px}.ah-focus{padding:18px}.ah-step{padding:14px}.ah-qrow{flex-direction:column;gap:6px}.ah-qp{padding-top:0}}
+@media(max-width:560px){.ah-qp{width:auto}.ah-card{padding:16px}.ah-focus{padding:18px}.ah-step{padding:14px}.ah-qrow{flex-direction:column;gap:6px}.ah-qp{padding-top:0}}
 @media(max-width:860px){.ah-shell{display:block}/* phone: floating, lifted nav so it stays clear of the system gesture area */.ah-side{position:fixed;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));top:auto;z-index:50;flex-direction:row;gap:8px;overflow-x:auto;overflow-y:hidden;border-radius:20px;padding:8px 10px;background:var(--bg-secondary);box-shadow:0 8px 28px rgba(0,0,0,.55);overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity}.ah-side::-webkit-scrollbar{display:none}.ah-side .ah-btn{white-space:nowrap;flex:0 0 auto;min-height:48px;padding:12px 18px;font-size:.95rem;scroll-snap-align:start}.ah-brand,.ah-spacer,.ah-save{display:none}.ah-main{padding-bottom:128px}}
 .ah-tpl{padding:24px 26px;transition:border-color .2s,background .2s}.ah-tpl.got{border-color:rgba(78,205,196,.55);background:rgba(78,205,196,.06)}
 .ah-tpl-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}.ah-tpl h4{margin:12px 0 0;font-size:1.05rem;line-height:1.45}
@@ -177,7 +179,7 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     const chipsHtml = t => {
         const g = [];
         t.qs.forEach(q => { const [p, n] = q.l.split(' Q'); const last = g[g.length - 1]; (last && last.p === p ? last : g[g.push({ p, qs: [] }) - 1]).qs.push({ q, n }); });
-        return g.map(({ p, qs }) => { const pp = paperFor(p); return `<div class="ah-qrow"><div class="ah-qp"><span>${e(p)}</span>${pp && onOpenPaper ? `<button class="ah-open" data-act="paper" data-id="${pp.id}" title="Open ${e(pp.label)} · ${e(pp.sub)}">📄 Open</button>` : ''}</div><div class="ah-chips">${qs.map(({ q, n }) => { const v = S.q[q.k] || 0;
+        return g.map(({ p, qs }) => { const pp = paperFor(p); return `<div class="ah-qrow"><div class="ah-qp"><span>${e(p)}</span>${pp && onOpenPaper ? `<button class="ah-open" data-act="paper" data-id="${pp.id}" title="Open ${e(pp.label)} · ${e(pp.sub)}">📄</button>` : ''}</div><div class="ah-chips">${qs.map(({ q, n }) => { const v = S.q[q.k] || 0;
             return `<button class="ah-q q${v}" data-act="q" data-t="${t.id}" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} Q${e(n)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div></div>`; }).join('');
     };
 
