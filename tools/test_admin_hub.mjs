@@ -40,11 +40,15 @@ ok(names.indexOf('CFG, PDA, ambiguity, CFL properties') < names.indexOf('Parsing
 nav('today'); ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output tracing'), 'today starts with Tier S #1');
 for (let i = 0; i < 20; i++) click(root.querySelector('.ah-focus [data-act=q].q0'));
 ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output'), 'not done without concept ✓');
-ok(root.querySelector('[data-act=finish]').disabled, 'Finish locked without concept ✓');
+ok(root.querySelector('[data-act=finish]').classList.contains('locked'), 'Finish is greyed (locked style) without concept ✓');
+global.confirm = () => false; click(root.querySelector('[data-act=finish]'));
+ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output'), 'early Finish + cancel → stays on topic'); global.confirm = () => true;
 const cb = root.querySelector('.ah-focus [data-act=tt][data-f=concept]'); cb.checked = true; cb.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output'), 'Today does NOT jump on its own at concept ✓ + 80%');
-const fin = root.querySelector('[data-act=finish]'); ok(!fin.disabled, 'Finish unlocks at concept ✓ + 80%');
-click(fin); ok(root.querySelector('.ah-focus h2').textContent.startsWith('Trees, BST'), 'Finish button advances the plan');
+const fin = root.querySelector('[data-act=finish]'); ok(!fin.classList.contains('locked') && fin.classList.contains('on'), 'Finish turns gold at concept ✓ + 80%');
+let asked = 0; global.confirm = () => { asked++; return true; };
+click(fin); ok(root.querySelector('.ah-focus h2').textContent.startsWith('Trees, BST'), 'Finish button advances the plan'); ok(asked === 0, 'no confirm when ready');
+click(root.querySelector('[data-act=finish]')); ok(asked === 1 && root.querySelector('.ah-focus h2').textContent.startsWith('Graph algos'), 'early Finish + confirm → advances (asks once)');
 click(root.querySelector('[data-act=student]')); ok(studentCalled, 'student-view toggle callback fires');
 nav('roadmap'); click(root.querySelector('[data-act=focus]:not([disabled])')); ok(root.textContent.includes('Back to plan'), 'focus override works');
 click(root.querySelector('[data-act=reopen]')); ok(root.querySelector('[data-act=finish]'), 'Reopen restores the Finish button');
