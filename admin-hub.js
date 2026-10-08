@@ -57,7 +57,8 @@ const CSS = `
 label.ah-step{display:flex;align-items:center;gap:12px;cursor:pointer}
 .ah-step input[type=checkbox],.ah-tbl input[type=checkbox]{width:19px;height:19px;accent-color:#f7c948;cursor:pointer}
 .ah-step .ah-prog{margin:12px 0 16px}.ah-qrow{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}.ah-qrow:last-child{margin-bottom:0}
-.ah-qp{min-width:62px;padding-top:9px;font-size:.78rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.ah-qp{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:78px;padding-top:8px;font-size:.78rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.ah-open{font:inherit;font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid rgba(247,201,72,.45);background:rgba(247,201,72,.08);color:#f7c948;cursor:pointer;transition:all .15s}.ah-open:hover{background:#f7c948;color:#111}
 .ah-focus .ah-in{margin-top:6px;padding:14px 16px}.ah-focus>p{margin-top:18px!important}.ah-cur{background:rgba(247,201,72,.1)}
 @media(max-width:560px){.ah-card{padding:16px}.ah-focus{padding:18px}.ah-step{padding:14px}.ah-qrow{flex-direction:column;gap:6px}.ah-qp{padding-top:0}}
 @media(max-width:860px){.ah-shell{display:block}/* phone: floating, lifted nav so it stays clear of the system gesture area */.ah-side{position:fixed;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));top:auto;z-index:50;flex-direction:row;gap:8px;overflow-x:auto;overflow-y:hidden;border-radius:20px;padding:8px 10px;background:var(--bg-secondary);box-shadow:0 8px 28px rgba(0,0,0,.55);overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity}.ah-side::-webkit-scrollbar{display:none}.ah-side .ah-btn{white-space:nowrap;flex:0 0 auto;min-height:48px;padding:12px 18px;font-size:.95rem;scroll-snap-align:start}.ah-brand,.ah-spacer,.ah-save{display:none}.ah-main{padding-bottom:128px}}
@@ -167,12 +168,17 @@ export function createAdminHub({ root, db, doc, getDoc, setDoc, esc, overviewHtm
     // ---------- views ----------
     function vOverview() { return `<div id="ah-overview">${overviewHtml ? overviewHtml() : ''}</div>`; }
 
+    // "'24-S1" → the matching entry of `papers` (GATE 2024 · Set 1); "'23" → GATE 2023 (single set)
+    const paperFor = tag => {
+        const m = /^'(\d\d)(?:-S(\d))?$/.exec(tag); if (!m) return null;
+        return papers.find(p => p.label === 'GATE 20' + m[1] && (m[2] ? p.sub.includes('Set ' + m[2]) : !/Set/.test(p.sub))) || null;
+    };
     // PYQ chips grouped one row per paper ('22, '23, '24-S1 …) so they scan easily
     const chipsHtml = t => {
         const g = [];
         t.qs.forEach(q => { const [p, n] = q.l.split(' Q'); const last = g[g.length - 1]; (last && last.p === p ? last : g[g.push({ p, qs: [] }) - 1]).qs.push({ q, n }); });
-        return g.map(({ p, qs }) => `<div class="ah-qrow"><span class="ah-qp">${e(p)}</span><div class="ah-chips">${qs.map(({ q, n }) => { const v = S.q[q.k] || 0;
-            return `<button class="ah-q q${v}" data-act="q" data-t="${t.id}" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} Q${e(n)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div></div>`).join('');
+        return g.map(({ p, qs }) => { const pp = paperFor(p); return `<div class="ah-qrow"><div class="ah-qp"><span>${e(p)}</span>${pp && onOpenPaper ? `<button class="ah-open" data-act="paper" data-id="${pp.id}" title="Open ${e(pp.label)} · ${e(pp.sub)}">📄 Open</button>` : ''}</div><div class="ah-chips">${qs.map(({ q, n }) => { const v = S.q[q.k] || 0;
+            return `<button class="ah-q q${v}" data-act="q" data-t="${t.id}" data-k="${q.k}">${v === 1 ? '✅' : v === 2 ? '❌' : '⬜'} Q${e(n)}${q.m === 2 ? '<small>2m</small>' : ''}</button>`; }).join('')}</div></div>`; }).join('');
     };
 
     function vToday() {
