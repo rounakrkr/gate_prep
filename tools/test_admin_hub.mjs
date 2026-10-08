@@ -40,10 +40,14 @@ ok(names.indexOf('CFG, PDA, ambiguity, CFL properties') < names.indexOf('Parsing
 nav('today'); ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output tracing'), 'today starts with Tier S #1');
 for (let i = 0; i < 20; i++) click(root.querySelector('.ah-focus [data-act=q].q0'));
 ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output'), 'not done without concept ✓');
+ok(root.querySelector('[data-act=finish]').disabled, 'Finish locked without concept ✓');
 const cb = root.querySelector('.ah-focus [data-act=tt][data-f=concept]'); cb.checked = true; cb.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-ok(root.querySelector('.ah-focus h2').textContent.startsWith('Trees, BST'), 'done (concept + 80% PYQs) → plan advances');
+ok(root.querySelector('.ah-focus h2').textContent.startsWith('C output'), 'Today does NOT jump on its own at concept ✓ + 80%');
+const fin = root.querySelector('[data-act=finish]'); ok(!fin.disabled, 'Finish unlocks at concept ✓ + 80%');
+click(fin); ok(root.querySelector('.ah-focus h2').textContent.startsWith('Trees, BST'), 'Finish button advances the plan');
 click(root.querySelector('[data-act=student]')); ok(studentCalled, 'student-view toggle callback fires');
 nav('roadmap'); click(root.querySelector('[data-act=focus]:not([disabled])')); ok(root.textContent.includes('Back to plan'), 'focus override works');
+click(root.querySelector('[data-act=reopen]')); ok(root.querySelector('[data-act=finish]'), 'Reopen restores the Finish button');
 click(root.querySelector('[data-act=auto]')); nav('roadmap');
 const ps = root.querySelector('[data-act=planstart]'); ps.value = new Date(Date.now() - 5 * 86400000).toISOString().slice(0, 10); ps.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 ok(root.textContent.includes('behind'), 'behind-schedule indicator');
@@ -86,4 +90,14 @@ root.innerHTML = '';
 hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '' });
 hub.mount(); await wait(20); nav('pyq');
 ok(root.querySelectorAll('.ah-q.q1, .ah-q.q2').length >= 1, 'state restored after reload');
+await hub.destroy();
+
+// 4. v1 → v2 migration: topics the old auto-rule had finished stay finished
+const c0 = TOPICS.find(t => t.name.startsWith('C output'));
+store = { q: Object.fromEntries(c0.qs.slice(0, 20).map(q => [q.k, 1])), t: { [c0.id]: { concept: true, last: '2026-10-07T10:00:00.000Z' } }, tpl: {}, err: [], plan: { start: '2026-10-06' }, v: 1 };
+root.innerHTML = '';
+hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '' });
+hub.mount(); await wait(20);
+ok(root.querySelector('.ah-focus h2').textContent.startsWith('Trees, BST'), 'v1 auto-finished topic migrated to done');
+await wait(900); ok(store.v === 2 && store.t[c0.id].done === '2026-10-07', 'migration persisted with done date');
 await hub.destroy(); process.exit(process.exitCode || 0);
