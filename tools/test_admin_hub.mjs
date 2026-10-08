@@ -104,4 +104,17 @@ hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '' });
 hub.mount(); await wait(20);
 ok(root.querySelector('.ah-focus h2').textContent.startsWith('Trees, BST'), 'v1 auto-finished topic migrated to done');
 await wait(900); ok(store.v === 2 && store.t[c0.id].done === '2026-10-07', 'migration persisted with done date');
+await hub.destroy();
+
+// 5. "Open" button on each paper row of the PYQ chips opens the right paper
+const PAPERS_CFG = [[101,'GATE 2026','CS · Set 1'],[102,'GATE 2026','CS · Set 2'],[103,'GATE 2025','CS · Set 1'],[104,'GATE 2025','CS · Set 2'],[105,'GATE 2024','CS · Set 1'],[106,'GATE 2024','CS · Set 2'],[107,'GATE 2023','CS'],[108,'GATE 2022','CS'],[109,'GATE 2021','CS']].map(([id, label, sub]) => ({ id, label, sub, pdf: 'x.pdf' }));
+let openedId = null; root.innerHTML = '';
+hub = createAdminHub({ root, db, doc, getDoc, setDoc, overviewHtml: () => '', papers: PAPERS_CFG, onOpenPaper: id => { openedId = id; } });
+hub.mount(); await wait(20); nav('today');
+const want = { "'22": 108, "'23": 107, "'24-S1": 105, "'24-S2": 106, "'25-S1": 103, "'25-S2": 104, "'26-S1": 101, "'26-S2": 102 };
+const rows = [...root.querySelectorAll('.ah-focus .ah-qrow')];
+ok(rows.length >= 6 && rows.every(r => r.querySelector('.ah-open')), 'every paper row has an Open button');
+let allOk = true;
+for (const r of rows) { openedId = null; click(r.querySelector('.ah-open')); const tag = r.querySelector('.ah-qp span').textContent; if (openedId !== want[tag]) { allOk = false; console.log('  mismatch', tag, openedId); } }
+ok(allOk, 'each tag opens the correct paper id');
 await hub.destroy(); process.exit(process.exitCode || 0);
